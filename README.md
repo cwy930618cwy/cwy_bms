@@ -1,5 +1,5 @@
 # hashfuture-asset-frontend
-哈希未来资产上链web前端工程
+web前端工程
 
 ## 关于工程
 
