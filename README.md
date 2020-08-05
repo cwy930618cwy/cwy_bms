@@ -19,9 +19,6 @@ lerna bootstrap
 
 ### 每个package的具体文档详见其自身目录下的README
 
-- [components](./packages/components/README.md)
-- [storybook](./packages/storybook/README.md)
-
 ## git 提交要求：
 
 ### 前缀
