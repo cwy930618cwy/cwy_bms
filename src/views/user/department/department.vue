@@ -1,0 +1,254 @@
+<template>
+  <div class="page1">
+    <Search :searchList="searchList" @handle-search="handleSearch"/>
+    <Button :buttonList="buttonList" @handle-button="handleButton"/>
+    <div class="contain">
+      <div class="left">
+        <NavMenu @handle-navmenu="handleNavMenu"/>
+      </div>
+      <div class="right">
+        <Table :fields="fields" :tableData="tableData" :tableButton="tableButton" @handle-selection-change="handleSelectionChange" @handle-table-button="handleTableButton"/>
+      </div>
+    </div>
+    <div class="footer">
+      <pagination :total="50" @pagination="currentChange" />
+    </div>
+
+    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="buttonClick">
+      <div class="company-content__dialog__center">
+        <Form v-if="chooseTableButton.type === 'edit'" :formData="formData"/>
+        <div v-if="chooseTableButton.type === 'delete'">是否确认删除</div>
+        <Show v-if="chooseTableButton.type === 'show'"/>
+        <System v-if="chooseTableButton.type === 'system'"/>
+      </div>
+    </Dialog>
+
+  </div>
+</template>
+<script lang="ts">
+import { Vue, Component, Watch } from 'vue-property-decorator'
+import Search from '@/views/user/components/Search/index.vue'
+import Button from '@/views/user/components/Button/index.vue'
+import NavMenu from '@/views/user/components/NavMenu/index.vue'
+import Table from '@/views/user/components/Table/index.vue'
+import Pagination from '@/components/Pagination/index.vue'
+import Dialog from '@/views/user/components/dialog/Dialog.vue'
+import Form from '@/views/user/components/Form/index.vue'
+import Show from './components/Show.vue'
+import System from './components/System.vue'
+
+@Component({
+    components: { Search, Button, NavMenu, Table, Pagination, Dialog, Form, Show, System }
+})
+export default class Page1 extends Vue {
+  // table列表
+  fields = [
+    {
+      prop: 'date',
+      label: '日期'
+    },
+    {
+      prop: 'name',
+      label: '姓名'
+    },
+    {
+      prop: 'address',
+      label: '地址'
+    }
+  ]
+  tableData = [{
+    date: '2016-05-03',
+    name: '王小虎',
+    address: '上海市普陀区金沙江路 1518 弄'
+  }, {
+    date: '2016-05-02',
+    name: '王小虎',
+    address: '上海市普陀区金沙江路 1518 弄'
+  }, {
+    date: '2016-05-04',
+    name: '王小虎',
+    address: '上海市普陀区金沙江路 1518 弄'
+  }, {
+    date: '2016-05-01',
+    name: '王小虎',
+    address: '上海市普陀区金沙江路 1518 弄'
+  }, {
+    date: '2016-05-08',
+    name: '王小虎',
+    address: '上海市普陀区金沙江路 1518 弄'
+  }, {
+    date: '2016-05-06',
+    name: '王小虎',
+    address: '上海市普陀区金沙江路 1518 弄'
+  }, {
+    date: '2016-05-07',
+    name: '王小虎',
+    address: '上海市普陀区金沙江路 1518 弄'
+  }]
+  tableButton = [
+    {
+      type: 'edit',
+      name: '编辑',
+      title: '编辑部门',
+      buttonType: 'primary',
+      dialogButton: ['取消', '好的']
+    },
+    {
+      type: 'delete',
+      name: '删除',
+      title: '确认删除',
+      buttonType: 'danger',
+      dialogButton: ['确认', '取消']
+    },
+    {
+      type: 'show',
+      name: '显示',
+      title: '显示系统信息',
+      buttonType: 'info',
+      dialogButton: ['关闭']
+    }
+  ]
+  selectList = []
+  handleSelectionChange(val: any){
+    console.log('handleSelectionChange---', val)
+    this.selectList = val
+  }
+  
+  // 搜索框
+  searchList = [
+    {
+      key: 'id',
+      name: '',
+      placeholder: 'id'
+    },
+    {
+      key: 'bumen',
+      name: '',
+      placeholder: '部门名称'
+    }
+  ]
+  handleSearch(data: any) {
+    console.log('handleSearch--', data)
+  }
+
+  // 左边系统展示
+  handleNavMenu(data: any) {
+    console.log('handleNavMenu---', data)
+  }
+
+  // 分页选择
+  currentChange(index: any) {
+    console.log('currentChange---', index)
+  }
+
+  // 列表按钮控制
+  buttonList = ['删除', '添加', '设置部门系统管理员']
+  handleButton(index: any) {
+    console.log('handleButton---', index)
+    if(index === 0){
+      this.chooseTableButton = this.tableButton[1]
+      this.changeGoldDialog = true
+    }
+    // 添加
+    if(index === 1){
+      this.chooseTableButton = {
+        type: 'edit',
+        name: '编辑',
+        title: '添加部门',
+        buttonType: 'primary',
+        dialogButton: ['取消', '好的']
+      }
+      this.changeGoldDialog = true
+    }
+    // 设置管理员
+    if(index === 2){
+      this.chooseTableButton = {
+        type: 'system',
+        title: '设置系统部门管理员',
+        dialogButton: ['关闭']
+      }
+      this.changeGoldDialog = true
+    }
+  }
+
+  // 弹窗
+  chooseTableButton = {}
+  formData: any[] = [
+    {
+      key: 'bumen',
+      type: 'Input',
+      name: '部门名称',
+      data: ''
+    },
+    {
+      key: 'father',
+      type: 'Select',
+      name: '父名称',
+      data: ''
+    },
+    {
+      key: 'paixu',
+      type: 'Input',
+      name: '排序',
+      data: ''
+    },
+    {
+      key: 'beizhu',
+      type: 'Textarea',
+      name: '备注',
+      data: ''
+    }
+  ]
+  changeGoldDialog = false
+  handleTableButton(val: any, item: any){
+    console.log('handleTableButton---', val)
+    console.log('index---', item)
+
+    this.chooseTableButton = item
+
+    this.changeGoldDialog = true
+  }
+
+  buttonClick(index: any) {
+    console.log('tijiao---', index)
+    this.changeGoldDialog = false
+  }
+
+  close () {
+    this.changeGoldDialog = false
+  }
+
+  // 监听form值变化
+  @Watch('formData',{immediate: true, deep: true})
+  onChangeFormData(newVal: string[], oldVal: string){
+    // this.formData = Object.assign({},newVal)
+    console.log(newVal)
+  }
+
+}
+</script>
+<style lang="scss" scoped>
+@import '@/styles/functions.scss';
+@import '@/styles/mixins.scss';
+
+.page1{
+  background: white;
+  padding: dim(30) dim(20);
+  position: relative;
+  margin: dim(20);
+  .contain{
+    width: 100%;
+    display: flex;
+    margin-bottom: dim(40);
+    .left{
+      width: dim(160);
+      border: dim(1) solid #eee;
+    }
+    .right{
+      padding: 0 dim(20);
+      flex: 1;
+      height: 100%;
+    }
+  }
+}
+</style>
