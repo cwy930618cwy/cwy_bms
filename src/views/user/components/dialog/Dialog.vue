@@ -11,10 +11,12 @@
       </div>
       <div class="dialog__buttons">
         <el-button 
+          size="medium"
           v-for="(button, index) in buttons" 
           :key="index" 
+          :type="button.type"
           @click="$emit('button-click', index)">
-            {{button}}
+            {{button.value}}
         </el-button>
       </div>
     </div>

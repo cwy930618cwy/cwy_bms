@@ -20,6 +20,11 @@ export const constantRoutes = [
     hidden: true
   },
   {
+    path: '/login',
+    component: () => import('../../src/views/login/index.vue'),
+    hidden: true
+  },
+  {
     path: '/',
     component: Layout,
     redirect: '/user/department'

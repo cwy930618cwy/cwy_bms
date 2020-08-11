@@ -29,6 +29,12 @@ const mutations = {
 }
 
 const actions = {
+  // 设置权限
+  setRoles({ commit }, roles){
+    commit('SET_ROLES', roles)
+    resetRouter()
+  },
+
   // user login
   login({ commit }, userInfo) {
     const { username, password } = userInfo

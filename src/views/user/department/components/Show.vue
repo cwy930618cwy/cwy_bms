@@ -1,13 +1,16 @@
 <template>
-  <div>
-      <span>部门名称: 技术部</span>
+  <div class="show">
+      <div class="showList" v-for="(item, index) in formData.formList" :key="index">
+        <span class="item">{{item.name}}:</span>
+        <span>{{item.data}}</span>
+      </div>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
+import { Vue, Component, Prop } from 'vue-property-decorator'
 @Component
 export default class Show extends Vue {
-  
+  @Prop({ default: () => [] }) formData!: any
 
 }
 </script>
@@ -15,4 +18,11 @@ export default class Show extends Vue {
 @import '@/styles/functions.scss';
 @import '@/styles/mixins.scss';
 
+.showList{
+  text-align: left;
+  margin-top: dim(20);
+  .item{
+    margin-right: dim(10);
+  }
+}
 </style>
