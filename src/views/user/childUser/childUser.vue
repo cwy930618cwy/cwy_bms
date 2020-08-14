@@ -4,22 +4,22 @@
     <Button :buttonList="buttonList" @handle-button="handleButton"/>
     <div class="contain">
       <div class="left">
-        <NavMenu @handle-navmenu="handleNavMenu"/>
+        <NavMenu :data="navMenuData" :defaultProps="navMenuProp" @handle-navmenu="handleNavMenu"/>
       </div>
       <div class="right">
-        <Table :fields="fields" :tableData="tableData" :tableButton="tableButton" @handle-selection-change="handleSelectionChange" @handle-table-button="handleTableButton"/>
+        <Table :fields="fields" :tableData="tableData.content" :tableButton="tableButton" @handle-selection-change="handleSelectionChange" @handle-table-button="handleTableButton"/>
       </div>
     </div>
     <div class="footer">
-      <pagination :total="50" @pagination="currentChange" />
+      <pagination :total="tableData.totalPages ? tableData.totalPages : 0" @pagination="currentChange" />
     </div>
 
-    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="buttonClick">
+    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="handleDialogButton">
       <div class="company-content__dialog__center">
         <Form ref="formRefs" v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'" :formData="newFormData" @handle-validate="handleValidate"/>
         <div v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'">是否确认删除</div>
-        <div v-if="chooseTableButton.type === 'mima'">新手机号为后6位</div>
-        <Form v-if="chooseTableButton.type === 'show'" :formData="showData"/>
+        <div v-if="chooseTableButton.type === 'password'">新手机号为后6位</div>
+        <Form v-if="chooseTableButton.type === 'accredit'" @handle-select="getSelectRoleListByUserIdAndSysId" :formData="showData"/>
       </div>
     </Dialog>
 
@@ -34,13 +34,19 @@ import Table from '@/views/user/components/Table/index.vue'
 import Pagination from '@/components/Pagination/index.vue'
 import Dialog from '@/views/user/components/dialog/Dialog.vue'
 import Form from '@/views/user/components/Form/index.vue'
-import { departmentList, departmentListPage, departmentDetail, departmentUpdate, departmentDelete } from '@/api/department'
+import { getDeptTree, postUserList } from '@/api/department'
+import {  getUserDetail, postResetPassword, postUserAdd, putUserUpdate, deleteUserBatch, postUserRoles, getSelectRoleListByUserIdAndSysId, getSelectDeptSysAdminListByCurrentUser, } from '@/api/childUser'
 
 @Component({
     components: { Search, Button, NavMenu, Table, Pagination, Dialog, Form }
 })
 export default class Page1 extends Vue {
   // table列表
+  deptList = {
+    pageIndex: 1,
+    length: 1000,
+    deptId: 0
+  }
   fields = [
     {
       prop: 'id',
@@ -55,7 +61,7 @@ export default class Page1 extends Vue {
       label: '昵称'
     },
     {
-      prop: 'ihone',
+      prop: 'phone',
       label: '手机'
     },
     {
@@ -67,10 +73,10 @@ export default class Page1 extends Vue {
       label: '性别'
     }
   ]
-  tableData = []
+  tableData: any = {}
   tableButton = [
     {
-      type: 'show',
+      type: 'accredit',
       name: '授权角色',
       title: '授权角色',
       buttonType: 'info',
@@ -119,148 +125,149 @@ export default class Page1 extends Vue {
   // 搜索框
   searchList = [
     {
-      key: 'id',
-      name: '',
-      placeholder: 'id'
-    },
-    {
-      key: 'user',
+      type: 'Input',
+      key: 'username',
       name: '',
       placeholder: '用户名'
     },
     {
-      key: 'iphone',
+      type: 'Input',
+      key: 'phone',
       name: '',
       placeholder: '手机'
     }
   ]
 
   // 列表按钮控制
-  buttonList = ['删除', '添加', '重置密码']
+  buttonList = [
+    {
+      key: 'delete',
+      name: '删除'
+    },
+    {
+      key: 'add',
+      name: '添加'
+    },
+    {
+      key: 'password',
+      name: '重置密码'
+    }
+  ]
+
+  // 部门树侧边栏
+  navMenuData = []
+  navMenuProp = {
+    children: 'deptVOS',
+    label: 'deptName'
+  }
 
   // 弹窗
   chooseTableButton: any = {}
   formData: any = {
     formList: [
       {
-        key: 'user',
+        key: 'username',
         type: 'Input',
         name: '用户名',
         data: '',
+        placeholder: '请输入用户名',
         rules: [
           { required: true, message: "请输入用户名", trigger: "blur" }
         ]
       },
       {
-        key: 'nima',
+        key: 'password',
         type: 'Input',
         name: '密码',
         data: '',
+        placeholder: '请输入密码',
         rules: [
           { required: true, message: "请输入密码", trigger: "blur" }
         ]
       },
       {
-        key: 'nicheng',
+        key: 'nickname',
         type: 'Input',
         name: '昵称',
         data: '',
+        placeholder: '请输入昵称',
         rules: [
           { required: true, message: "请输入昵称", trigger: "blur" }
         ]
       },
       {
-        key: 'shouji',
+        key: 'phone',
         type: 'Input',
         name: '手机',
         data: '',
+        placeholder: '请输入手机',
         rules: [
           { required: true, message: "请输入手机", trigger: "blur" }
         ]
       },
       {
-        key: 'youx',
+        key: 'email',
         type: 'Input',
         name: '邮箱',
         data: '',
+        placeholder: '请输入邮箱',
         rules: [
           { required: true, message: "请输入邮箱", trigger: "blur" }
         ]
       },
       // {
-      //   key: 'toux',
+      //   key: 'avatar',
       //   type: 'upload',
       //   name: '头像',
-      //   data: '',
-      //   rules: [
-      //     { required: true, message: "请输入头像", trigger: "blur" }
-      //   ]
+      //   data: ''
       // },
       {
-        key: 'bumen',
-        type: 'cascader',
-        name: '部门',
-        data: [],
-        options: [{
-          value: 'zhinan',
-          label: '指南',
-          children: [{
-            value: 'shejiyuanze',
-            label: '设计原则',
-            children: [{
-              value: 'yizhi',
-              label: '一致'
-            }, {
-              value: 'fankui',
-              label: '反馈'
-            }, {
-              value: 'xiaolv',
-              label: '效率'
-            }, {
-              value: 'kekong',
-              label: '可控'
-            }]
-          }]
-        }],
-        rules: [
-          { required: true, message: "请输入部门", trigger: "blur" }
-        ]
-      },
-      {
-        key: 'xingbie',
+        key: 'gender',
         type: 'Radio',
         name: '性别',
-        data: '',
-        label: ['男','女'],
+        data: 1,
+        label: [
+          {
+            value: 1,
+            label: '男'
+          },
+          {
+            value: 2,
+            label: '女'
+          }
+        ],
         rules: [
           { required: true, message: "请输入性别", trigger: "blur" }
         ]
       },
       {
-        key: 'chengshi',
+        key: 'city',
         type: 'Input',
         name: '城市',
         data: '',
+        placeholder: '请输入城市',
         rules: [
           { required: true, message: "请输入城市", trigger: "blur" }
         ]
       },
       {
-        key: 'zhiye',
+        key: 'job',
         type: 'Input',
         name: '职业',
         data: '',
+        placeholder: '请输入职业',
         rules: [
           { required: true, message: "请输入职业", trigger: "blur" }
         ]
       },
       {
-        key: 'beizhu',
+        key: 'personalizedSignature',
         type: 'Textarea',
-        name: '备注',
+        name: '个性签名',
         data: '',
+        placeholder: '请输入个性签名',
         rules: [
-          { required: true, message: "请输入备注", trigger: "blur" }
+          { required: true, message: "请输入个性签名", trigger: "blur" }
         ]
       }
     ]
@@ -268,38 +275,19 @@ export default class Page1 extends Vue {
   showData: any = {
     formList: [
       {
-        key: 'bumen',
+        key: 'userId',
         type: 'Select',
         name: '选择系统',
-        data: 'yi',
+        data: '',
         label: [
-          {
-            value: 'yi',
-            label: '部门一',
-          },
-          {
-            value: 'er',
-            label: '部门二',
-          }
         ],
       },
       {
-        key: 'shouquan',
+        key: 'roleIds',
         type: 'transfer',
         name: '角色授权',
         defaultdata: [
-          {
-            key: 0,
-            label: '备选项0'
-          },
-          {
-            key: 1,
-            label: '备选项1'
-          },
-          {
-            key: 2,
-            label: '备选项2'
-          }
+          
         ],
         data: []
       }
@@ -308,39 +296,46 @@ export default class Page1 extends Vue {
   newFormData: any = {}
   changeGoldDialog = false
 
-  // table列表
+  mounted() {
+    this.getDeptTree()
+  }
+
+  // 分页选择当前页
   handleSelectionChange(val: any){
-    console.log('handleSelectionChange---', val)
     this.selectList = val
   }
   
   // 搜索框
   handleSearch(data: any) {
-    console.log('handleSearch--', data)
-    let submitData: any = {}
     data.forEach((item: any)=>{
-      submitData[item.key] = item.name
+      (this.deptList as any)[item.key] = item.name
     })
-    console.log('submitData---', submitData)
+    this.postUserList()
   }
 
   // 左边系统展示
   handleNavMenu(data: any) {
-    console.log('handleNavMenu---', data)
-    if(!data.children){
-      console.log('diaojiekou--')
-    }
+    this.deptList.deptId = data.id
+    this.postUserList()
   }
 
   // 分页选择
   currentChange(index: any) {
-    console.log('currentChange---', index)
+    this.deptList.pageIndex = index.page
+    this.deptList.length = index.limit
+    this.postUserList()
   }
 
-  // 列表按钮控制
-  handleButton(index: any) {
-    console.log('handleButton---', index)
-    if(index === 0){
+  // 总体按钮点击弹窗
+  handleButton(type: any) {
+    if(type === 'delete'){
+      if(this.selectList.length === 0){
+        this.$message({
+          message: '请选择至少一名用户',
+          type: 'warning'
+        })
+        return
+      }
       this.chooseTableButton = {
         type: 'formdelete',
         name: '删除',
@@ -359,32 +354,32 @@ export default class Page1 extends Vue {
       this.changeGoldDialog = true
     }
     // 添加
-    if(index === 1){
+    if(type === 'add'){
       this.chooseTableButton = {
         type: 'add',
         name: '添加',
-        title: '添加部门',
-        buttonType: 'primary',
+        title: '添加用户',
         dialogButton: [
           {
             type: 'primary',
             value: '确认'
-          },
-          {
-            type: 'info',
-            value: '取消'
           }
         ]
       }
       this.newFormData = JSON.parse(JSON.stringify(this.formData))
-
-      console.log('newFormData', this.newFormData)
       this.changeGoldDialog = true
     }
-    // 设置管理员
-    if(index === 2){
+    // 重置密码
+    if(type === 'password'){
+      if(this.selectList.length === 0){
+        this.$message({
+          message: '请选择至少一名用户',
+          type: 'warning'
+        })
+        return
+      }
       this.chooseTableButton = {
-        type: 'mima',
+        type: 'password',
         title: '重置密码',
         dialogButton: [
           {
@@ -401,25 +396,27 @@ export default class Page1 extends Vue {
     }
   }
 
-  // 弹窗
+  // table点击弹窗
   handleTableButton(val: any, item: any){
-    console.log('handleTableButton---', val)
-    console.log('index---', item)
-    this.newFormData = JSON.parse(JSON.stringify(this.formData));
     item.id = val.id
     this.chooseTableButton = item
-    this.changeGoldDialog = true
+
+    if(item.type === 'accredit'){
+      this.getSelectDeptSysAdminListByCurrentUser()
+    }else if(item.type === 'edit'){
+      this.getUserDetail(val.id)
+    }else{
+      this.changeGoldDialog = true
+    }
   }
 
-  buttonClick(index: any) {
-    console.log('tijiao---', index)
+  // 弹窗按钮点击
+  handleDialogButton(index: any) {
     const type = this.chooseTableButton.type
-
-    console.log(type)
     switch(type)
     {
-      case 'show':
-        this.handleShow()
+      case 'accredit':
+        this.handleAccredit()
         break
       case 'edit':
         (this.$refs.formRefs as any).submitForm()
@@ -431,76 +428,72 @@ export default class Page1 extends Vue {
         this.handleFormdelete(index)
         break
       case 'add':
-        this.handleFormAdd()
+        (this.$refs.formRefs as any).submitForm()
+        break
+      case 'password':
+        this.handlePassword(index)
         break
       default:
         this.changeGoldDialog = false
     }
   }
 
-  handleShow(){
-    console.log('handleShow---')
-    console.log('chooseTableButton---',this.chooseTableButton)
-    console.log('updateShowData---',this.updateShowData)
-    let submitData: any = {}
-    this.updateShowData.formList.forEach((item: any)=>{
-      submitData[item.key] = item.data
-    })
-
-    console.log(submitData)
-    this.changeGoldDialog = false
-  }
-
-  handleDelete(index: any) {
-    console.log('handleDelete---')
-    if(index === 0){
-      console.log('确认删除------')
-      console.log('chooseTableButton---',this.chooseTableButton)
-    }
-    this.changeGoldDialog = false
-  }
-
+  // 总体删除按钮
   handleFormdelete(index: any) {
-    console.log('handleFormdelete---')
     if(index === 0){
       let idArr: any = []
       this.selectList.forEach((item: any)=>{
         idArr.push(item.id)
       })
-      console.log('selectList',this.selectList)
-      console.log('确认删除------', idArr)
+      this.deleteUserBatch(idArr)
     }
-    this.changeGoldDialog = false
   }
 
-  handleFormAdd() {
-    console.log('handleFormAdd---')
-
-    console.log('handleValidate----hhhh', this.updateData)
+  // 编辑/添加提交操作
+  handleValidate(arrId?: any){
     let submitData: any = {}
     this.updateData.formList.forEach((item: any)=>{
       submitData[item.key] = item.data
     })
+    submitData.deptId = this.deptList.deptId
+    submitData.avatar = ""
+    if(this.chooseTableButton.id){
+      submitData.id = this.chooseTableButton.id
+      this.putUserUpdate(submitData)
+    }else{
+      this.postUserAdd(submitData)
+    }
+  }
 
-    console.log(submitData)
+  // 重置密码
+  handlePassword(index: any){
+    if(index === 0){
+      this.postResetPassword()
+    }else{
+      this.changeGoldDialog = false
+    }
+  }
+
+  // 授权角色
+  handleAccredit(){
+    let submitData: any = {}
+    this.updateShowData.formList.forEach((item: any)=>{
+      submitData[item.key] = item.data
+    })
+    this.postUserRoles(submitData)
+  }
+
+  // table删除单个角色
+  handleDelete(index: any) {
+    if(index === 0){
+      this.deleteUserBatch()
+    }else{
+      this.changeGoldDialog = false
+    }
   }
 
   close () {
     this.changeGoldDialog = false
-  }
-
-  // 提交操作
-  handleValidate(){
-    console.log('chooseTableButton---',this.chooseTableButton)
-    console.log('handleValidate----hhhh', this.updateData)
-    let submitData: any = {}
-    this.updateData.formList.forEach((item: any)=>{
-      submitData[item.key] = item.data
-    })
-
-    console.log('submitData0---')
-    // this.changeGoldDialog = false
-    console.log(submitData)
   }
 
   // 监听form值变化
@@ -508,14 +501,145 @@ export default class Page1 extends Vue {
   @Watch('newFormData',{immediate: true, deep: true})
   onChangeFormData(newVal: string[], oldVal: string){
     this.updateData = newVal
-    console.log('newVal----', newVal)
   }
 
   updateShowData: any = {}
   @Watch('showData',{immediate: true, deep: true})
   onChangeFormShowData(newVal: string[], oldVal: string){
     this.updateShowData = newVal
-    console.log('newVal----', newVal)
+  }
+
+  // 接口调取
+  // 分页查询部门树
+  getDeptTree() {
+    const params = {
+      pageNum: 1,
+      pageSize: 1000
+    }
+    getDeptTree(params).then((response: any) => {
+      const content = this.treeData(response.data.content)
+      this.navMenuData = content
+      this.deptList.deptId = content[0].id
+      this.postUserList()
+    })
+  }
+  treeData(data: any) {
+    data.forEach((element: any) => {
+      if(element.deptVOS.length === 0){
+        element.deptVOS = undefined
+      }else{
+        this.treeData(element.deptVOS)
+      }
+    })
+    return data
+  }
+
+  // 分页查询用户
+  postUserList() {
+    const params = this.deptList
+    postUserList(params).then((response: any) => {
+      this.tableData  = response.data
+    })
+  }
+
+  // 授权角色
+  getSelectDeptSysAdminListByCurrentUser() {
+    getSelectDeptSysAdminListByCurrentUser().then((response: any) => {
+      response.data.forEach((item: any) => {
+        this.showData.formList[0].label.push(
+          {
+            value: item.id,
+            label: item.systemName
+          }
+        )
+      })
+      this.showData.formList[0].data = response.data[0].id
+      this.getSelectRoleListByUserIdAndSysId(response.data[0].id)
+      this.changeGoldDialog = true
+    })
+  }
+
+  // 授权角色 选择部门
+  getSelectRoleListByUserIdAndSysId(index: any){
+    const params = {
+      sysId: index,
+      userId: this.chooseTableButton.id
+    }
+    getSelectRoleListByUserIdAndSysId(params).then((response: any) => {
+      const data = response.data
+      data.haveList.forEach((item: any)=>{
+        this.showData.formList[1].data.push(
+          {
+            key: item.id,
+            label: item.roleName
+          }
+        )
+      })
+
+      data.noHaveList.forEach((item: any) => {
+        this.showData.formList[1].defaultdata.push(
+          {
+            key: item.id,
+            label: item.roleName
+          }
+        )
+      })
+    })
+  }
+
+  // 编辑按钮 回显
+  getUserDetail(id: any){
+    getUserDetail(id).then((response: any) => {
+      this.newFormData = JSON.parse(JSON.stringify(this.formData));
+      this.newFormData.formList.forEach((element: any) => {
+        element.data = response.data[element.key]
+      })
+      this.changeGoldDialog = true
+    })
+  }
+
+  // 添加用户提交
+  postUserAdd(data: any){
+    postUserAdd(data).then((response: any) => {
+      this.postUserList()
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 编辑提交
+  putUserUpdate(data: any) {
+    putUserUpdate(data).then((response: any) => {
+      this.postUserList()
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 删除列表
+  deleteUserBatch(arrId?: any) {
+    const id = arrId ? arrId : [this.chooseTableButton.id]
+    deleteUserBatch(id).then((response: any) => {
+      this.postUserList()
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 重置密码
+  postResetPassword(){
+    const id: any = []
+    this.selectList.forEach((item: any)=>{
+      id.push(item.id)
+    })
+    postResetPassword(id).then((response: any) => {
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 授权提交
+  postUserRoles(data: any){
+    postUserRoles(data).then((response: any) => {
+      this.postUserList()
+      this.changeGoldDialog = false
+    })
   }
 
 }

@@ -1,6 +1,6 @@
 <template>
     <div class="components_handleList">
-      <el-button v-for="(item, index) in buttonList" :key="index" @click="$emit('handle-button', index)">{{item}}</el-button>
+      <el-button v-for="(item, index) in buttonList" :key="index" @click="$emit('handle-button', item.key)">{{item.name}}</el-button>
     </div>
 </template>
 <script lang="ts">

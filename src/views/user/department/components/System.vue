@@ -1,11 +1,11 @@
 <template>
   <div class="system">
     <Search :searchList="searchList" @handle-search="handleSearch"/>
-    <Table :showSelect="false" :fields="fields" :tableData="tableData" :tableButton="tableButton" @handle-table-button="handleTableButton"/>
+    <Table :showSelect="false" :fields="fields" :tableData="tableData.content" :tableButton="tableButton" @handle-table-button="handleTableButton"/>
     <div class="footer">
-      <pagination :total="50" @pagination="currentChange" />
+      <pagination :total="tableData.totalPages ? tableData.totalPages : 0" @pagination="currentChange" />
     </div>
-    <Dialog :width="chooseTableButton.width" v-if="changeGold" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="buttonClick">
+    <Dialog :width="chooseTableButton.width" v-if="changeGold" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="handleDialogButton">
       <div class="company-content__dialog__center">
         <Form :formData="formSystemData"/>
       </div>
@@ -13,24 +13,24 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch } from 'vue-property-decorator'
+import { Vue, Component, Watch, Prop } from 'vue-property-decorator'
 import Search from '@/views/user/components/Search/index.vue'
 import Table from '@/views/user/components/Table/index.vue'
 import Dialog from '@/views/user/components/dialog/Dialog.vue'
 import Form from '@/views/user/components/Form/index.vue'
 import Pagination from '@/components/Pagination/index.vue'
-import { getUserList, getSelectSysAdminListByCurrentUser } from '@/api/department'
+import { postUserList, getSelectSysAdminListByCurrentUser, getAllocationDeptSysAdmin } from '@/api/department'
 @Component({
   components: { Search, Table, Dialog, Form, Pagination }
 })
 export default class Show extends Vue {
+  @Prop({ default: () => [] }) parentId!: any
+
   // table列表
   userList = {
     pageIndex: 1,
     length: 1000,
-    parentId: 0,
-    deptName: '',
-    id: 0
+    deptId: 0
   }
   fields = [
     {
@@ -77,42 +77,18 @@ export default class Show extends Vue {
   // 搜索框
   searchList = [
     {
-      key: 'id',
-      name: '',
-      placeholder: 'id'
-    },
-    {
+      type: 'Input',
       key: 'username',
       name: '',
       placeholder: '用户名'
     },
     {
+      type: 'Input',
       key: 'phone',
       name: '',
       placeholder: '手机'
     }
   ]
-
-  mounted() {
-    console.log('system--mounted---')
-    this.getUserList()
-  }
-
-  handleSearch(data: any) {
-    console.log('handleSearch--', data)
-    data.forEach((item: any)=>{
-      (this.userList as any)[item.key] = item.name
-    })
-    this.getUserList()
-  }
-
-  // 底部按钮
-  currentChange(index: any) {
-    console.log('currentChange---', index)
-    this.userList.pageIndex = index.page
-    this.userList.length = index.limit
-    this.getUserList()
-  }
 
   // 弹窗
   chooseTableButton: any = {}
@@ -128,14 +104,35 @@ export default class Show extends Vue {
       }
     ]}
   changeGold = false
+
+  mounted() {
+    this.postUserList()
+  }
+
+  // 搜索框
+  handleSearch(data: any) {
+    data.forEach((item: any)=>{
+      (this.userList as any)[item.key] = item.name
+    })
+    this.postUserList()
+  }
+
+  // 分页选择
+  currentChange(index: any) {
+    this.userList.pageIndex = index.page
+    this.userList.length = index.limit
+    this.postUserList()
+  }
+
+  // table点击弹窗
   handleTableButton(val: any, item: any){
     item.id = val.id
     this.chooseTableButton = item
     this.getSelectSysAdminListByCurrentUser()
   }
 
-  buttonClick(index: any) {
-    console.log('queren---', this.updateSystemData)
+  // 弹窗按钮点击
+  handleDialogButton() {
     this.getAllocationDeptSysAdmin()
   }
 
@@ -147,47 +144,44 @@ export default class Show extends Vue {
   updateSystemData: any = {}
   @Watch('formSystemData',{immediate: true, deep: true})
   onChangeFormData(newVal: string[], oldVal: string){
-    // this.formData = Object.assign({},newVal)
     this.updateSystemData = newVal
-    console.log('newVal----', newVal)
   }
 
   // 接口调取
   // 分页查询用户第三方信息
-  getUserList() {
-    console.log('getUserList---')
-    
-    // getUserList(this.userList).then((response: any) => {
-    //   console.log('jiekouhaole ---', response)
-    // })
-    console.log('params---', this.userList)
-    const ff = getUserList(this.userList)
-    this.tableData = ff.content
+  postUserList() {
+    this.userList.deptId = this.parentId
+    postUserList(this.userList).then((response: any) => {
+      this.tableData = response.data
+    })
   }
 
   // 选择子系统
   getSelectSysAdminListByCurrentUser(){
     getSelectSysAdminListByCurrentUser().then((response: any) => {
+      this.formSystemData.formList[0].defaultdata = []
       response.data.forEach((element: any) => {
         this.formSystemData.formList[0].defaultdata.push(
           {
+            value: element.id,
             label: element.systemName
           }
         )
       })
+      console.log(this.formSystemData.formList)
       this.changeGold = true
     })
   }
 
   // 选择子系统确认
   getAllocationDeptSysAdmin(){
-    console.log('getAllocationDeptSysAdmin---')
     const data = {
       systemId: this.chooseTableButton.id,
       userIdList: this.updateSystemData.formList[0].data
     }
-    console.log('data----====', data)
-    this.changeGold = false
+    getAllocationDeptSysAdmin(data).then((response: any) => {
+      this.changeGold = false
+    })
   }
 
 }

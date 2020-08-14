@@ -4,18 +4,18 @@
     <Button :buttonList="buttonList" @handle-button="handleButton"/>
     <div class="contain">
       <div class="right">
-        <Table :fields="fields" :tableData="tableData" :tableButton="tableButton" @handle-selection-change="handleSelectionChange" @handle-table-button="handleTableButton"/>
+        <Table :fields="fields" :tableData="tableData.content" :tableButton="tableButton" @handle-selection-change="handleSelectionChange" @handle-table-button="handleTableButton"/>
       </div>
     </div>
     <div class="footer">
-      <pagination :total="50" @pagination="currentChange" />
+      <pagination :total="tableData.totalPages ? tableData.totalPages : 0" @pagination="currentChange" />
     </div>
 
-    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="buttonClick">
+    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="handleDialogButton">
       <div class="company-content__dialog__center">
-        <Form ref="formRefs" v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'" :formData="formData" @handle-validate="handleValidate"/>
+        <Form ref="formRefs" v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'" :formData="newFormData" @handle-validate="handleValidate"/>
         <div v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'">是否确认删除</div>
-        <System v-if="chooseTableButton.type === 'system'"/>
+        <System v-if="chooseTableButton.type === 'setAdmin'"/>
       </div>
     </Dialog>
 
@@ -30,70 +30,40 @@ import Pagination from '@/components/Pagination/index.vue'
 import Dialog from '@/views/user/components/dialog/Dialog.vue'
 import Form from '@/views/user/components/Form/index.vue'
 import System from './components/System.vue'
+import { getSystemList, getSystemDetail, postSystemAdd, postSystemUpdate, postSystemDelete } from '@/api/childSystem'
 
 @Component({
     components: { Search, Button, Table, Pagination, Dialog, Form, System }
 })
 export default class Page1 extends Vue {
   // table列表
+  deptList = {
+    pageIndex: 1,
+    length: 1000
+  }
   fields = [
     {
       prop: 'id',
       label: 'id'
     },
     {
-      prop: 'biaoshi',
+      prop: 'systemCode',
       label: '系统标识'
     },
     {
-      prop: 'name',
+      prop: 'systemName',
       label: '系统名称'
     },
     {
-      prop: 'address',
+      prop: 'loginCallbackUrl',
       label: '回调地址'
     },
     {
-      prop: 'beizhu',
+      prop: 'remark',
       label: '备注'
     },
   ]
-  tableData = [{
-    id: 1,
-    date: '2016-05-03',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    id: 2,
-    date: '2016-05-02',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    id: 3,
-    date: '2016-05-04',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    id: 4,
-    date: '2016-05-01',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    id: 5,
-    date: '2016-05-08',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    id: 6,
-    date: '2016-05-06',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    id: 7,
-    date: '2016-05-07',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }]
+  tableData: any = {}
   tableButton = [
     {
       type: 'edit',
@@ -133,91 +103,118 @@ export default class Page1 extends Vue {
   // 搜索框
   searchList = [
     {
-      key: 'id',
+      type: 'Input',
+      key: 'systemCode',
       name: '',
-      placeholder: 'id'
+      placeholder: '系统标识'
     },
     {
-      key: 'bumen',
+      type: 'Input',
+      key: 'systemName',
       name: '',
       placeholder: '系统名称'
-    },
-    {
-      key: 'biaoshi',
-      name: '',
-      placeholder: '设置标识'
     }
   ]
 
   // 列表按钮控制
-  buttonList = ['删除', '添加', '设置管理员']
+  buttonList = [
+    {
+      key: 'delete',
+      name: '删除'
+    },
+    {
+      key: 'add',
+      name: '添加'
+    },
+    {
+      key: 'admin',
+      name: '设置管理员'
+    }
+  ]
 
   // 弹窗
   chooseTableButton: any = {}
   formData: any = {
     formList: [
       {
-        key: 'bumen',
+        key: 'systemCode',
         type: 'Input',
         name: '系统标识',
-        data: ''
+        data: '',
+        placeholder: '请输入系统标识',
+        rules: [
+          { required: true, message: "请输入系统标识", trigger: "blur" }
+        ]
       },
       {
-        key: 'name',
+        key: 'systemName',
         type: 'Input',
         name: '系统名称',
-        data: ''
+        data: '',
+        placeholder: '请输入系统名称',
+        rules: [
+          { required: true, message: "请输入系统名称", trigger: "blur" }
+        ]
       },
       {
-        key: 'address',
+        key: 'loginCallbackUrl',
         type: 'Input',
         name: '回调地址',
-        data: ''
+        data: '',
+        placeholder: '请输入回调地址',
+        rules: [
+          { required: true, message: "请输入回调地址", trigger: "blur" }
+        ]
       },
       {
-        key: 'beizhu',
+        key: 'remark',
         type: 'Textarea',
         name: '备注',
-        data: ''
+        data: '',
+        placeholder: '请输入备注',
+        rules: [
+          { required: true, message: "请输入备注", trigger: "blur" }
+        ]
       }
     ]
   }
   newFormData: any = {}
   changeGoldDialog = false
 
-  // table列表
+  mounted() {
+    this.getSystemList()
+  }
+
+  // 分页选择当前页
   handleSelectionChange(val: any){
-    console.log('handleSelectionChange---', val)
     this.selectList = val
   }
   
   // 搜索框
   handleSearch(data: any) {
-    console.log('handleSearch--', data)
-    let submitData: any = {}
     data.forEach((item: any)=>{
-      submitData[item.key] = item.name
+      (this.deptList as any)[item.key] = item.name
     })
-    console.log('submitData---', submitData)
-  }
-
-  // 左边系统展示
-  handleNavMenu(data: any) {
-    console.log('handleNavMenu---', data)
-    if(!data.children){
-      console.log('diaojiekou--')
-    }
+    this.getSystemList()
   }
 
   // 分页选择
   currentChange(index: any) {
-    console.log('currentChange---', index)
+    this.deptList.pageIndex = index.page
+    this.deptList.length = index.limit
+    this.getSystemList()
   }
 
-  // 列表按钮控制
-  handleButton(index: any) {
-    console.log('handleButton---', index)
-    if(index === 0){
+  // 总体按钮点击弹窗
+  handleButton(type: any) {
+    if(type === 'delete'){
+      if(this.selectList.length === 0){
+        this.$message({
+          message: '请选择至少一名用户',
+          type: 'warning'
+        })
+        return
+      }
       this.chooseTableButton = {
         type: 'formdelete',
         name: '删除',
@@ -236,12 +233,11 @@ export default class Page1 extends Vue {
       this.changeGoldDialog = true
     }
     // 添加
-    if(index === 1){
+    if(type === 'add'){
       this.chooseTableButton = {
         type: 'add',
         name: '添加',
         title: '添加子系统',
-        buttonType: 'primary',
         dialogButton: [
           {
             type: 'primary',
@@ -257,10 +253,10 @@ export default class Page1 extends Vue {
       this.changeGoldDialog = true
     }
     // 设置管理员
-    if(index === 2){
+    if(type === 'admin'){
       this.chooseTableButton = {
-        type: 'mima',
-        title: '重置密码',
+        type: 'setAdmin',
+        title: '设置管理员',
         dialogButton: [
           {
             type: 'primary',
@@ -272,32 +268,26 @@ export default class Page1 extends Vue {
           }
         ]
       }
+      this.changeGoldDialog = true
     }
-    this.changeGoldDialog = true
-
-    console.log('newFormData', this.newFormData)
   }
 
-  // 弹窗
+  // table点击弹窗
   handleTableButton(val: any, item: any){
-    console.log('handleTableButton---', val)
-    console.log('index---', item)
-    this.newFormData = JSON.parse(JSON.stringify(this.formData));
     item.id = val.id
     this.chooseTableButton = item
-    this.changeGoldDialog = true
+    if(item.type === 'edit'){
+      this.getSystemDetail(val.id)
+    }else{
+      this.changeGoldDialog = true
+    }
   }
 
-  buttonClick(index: any) {
-    console.log('tijiao---', index)
+  // 弹窗按钮点击
+  handleDialogButton(index: any) {
     const type = this.chooseTableButton.type
-
-    console.log(type)
     switch(type)
     {
-      case 'show':
-        this.handleShow()
-        break
       case 'edit':
         (this.$refs.formRefs as any).submitForm()
         break
@@ -308,76 +298,49 @@ export default class Page1 extends Vue {
         this.handleFormdelete(index)
         break
       case 'add':
-        this.handleFormAdd()
+        (this.$refs.formRefs as any).submitForm()
         break
       default:
         this.changeGoldDialog = false
     }
   }
 
-  handleShow(){
-    console.log('handleShow---')
-    console.log('chooseTableButton---',this.chooseTableButton)
-    console.log('updateShowData---',this.updateShowData)
-    let submitData: any = {}
-    this.updateShowData.formList.forEach((item: any)=>{
-      submitData[item.key] = item.data
-    })
-
-    console.log(submitData)
-    this.changeGoldDialog = false
-  }
-
-  handleDelete(index: any) {
-    console.log('handleDelete---')
-    if(index === 0){
-      console.log('确认删除------')
-      console.log('chooseTableButton---',this.chooseTableButton)
-    }
-    this.changeGoldDialog = false
-  }
-
+  // 总体删除按钮
   handleFormdelete(index: any) {
-    console.log('handleFormdelete---')
     if(index === 0){
       let idArr: any = []
       this.selectList.forEach((item: any)=>{
         idArr.push(item.id)
       })
-      console.log('selectList',this.selectList)
-      console.log('确认删除------', idArr)
+      this.postSystemDelete(idArr)
     }
-    this.changeGoldDialog = false
   }
 
-  handleFormAdd() {
-    console.log('handleFormAdd---')
-
-    console.log('handleValidate----hhhh', this.updateData)
+  // 编辑/添加提交操作
+  handleValidate(arrId?: any){
     let submitData: any = {}
     this.updateData.formList.forEach((item: any)=>{
       submitData[item.key] = item.data
     })
+    if(this.chooseTableButton.id){
+      submitData.id = this.chooseTableButton.id
+      this.postSystemUpdate(submitData)
+    }else{
+      this.postSystemAdd(submitData)
+    }
+  }
 
-    console.log(submitData)
+  // table删除单个角色
+  handleDelete(index: any) {
+    if(index === 0){
+      this.postSystemDelete()
+    }else{
+      this.changeGoldDialog = false
+    }
   }
 
   close () {
     this.changeGoldDialog = false
-  }
-
-  // 提交操作
-  handleValidate(){
-    console.log('chooseTableButton---',this.chooseTableButton)
-    console.log('handleValidate----hhhh', this.updateData)
-    let submitData: any = {}
-    this.updateData.formList.forEach((item: any)=>{
-      submitData[item.key] = item.data
-    })
-
-    console.log('submitData0---')
-    // this.changeGoldDialog = false
-    console.log(submitData)
   }
 
   // 监听form值变化
@@ -385,14 +348,51 @@ export default class Page1 extends Vue {
   @Watch('newFormData',{immediate: true, deep: true})
   onChangeFormData(newVal: string[], oldVal: string){
     this.updateData = newVal
-    console.log('newVal----', newVal)
   }
 
-  updateShowData: any = {}
-  @Watch('showData',{immediate: true, deep: true})
-  onChangeFormShowData(newVal: string[], oldVal: string){
-    this.updateShowData = newVal
-    console.log('newVal----', newVal)
+  // 接口调取
+  // 分页查询用户
+  getSystemList() {
+    getSystemList(this.deptList).then((response: any) => {
+      this.tableData  = response.data
+    })
+  }
+
+  // 编辑按钮 回显
+  getSystemDetail(data: any){
+
+    getSystemDetail({ id: data }).then((response: any) => {
+      this.newFormData = JSON.parse(JSON.stringify(this.formData));
+      this.newFormData.formList.forEach((element: any) => {
+        element.data = response.data[element.key]
+      })
+      this.changeGoldDialog = true
+    })
+  }
+
+  // 添加系统提交
+  postSystemAdd(data: any){
+    postSystemAdd(data).then((response: any) => {
+      this.getSystemList()
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 编辑提交
+  postSystemUpdate(data: any) {
+    postSystemUpdate(data).then((response: any) => {
+      this.getSystemList()
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 删除列表
+  postSystemDelete(arrId?: any) {
+    const id = arrId ? arrId : [this.chooseTableButton.id]
+    postSystemDelete(id).then((response: any) => {
+      this.getSystemList()
+      this.changeGoldDialog = false
+    })
   }
 
 }

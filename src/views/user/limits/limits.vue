@@ -4,18 +4,17 @@
     <Button :buttonList="buttonList" @handle-button="handleButton"/>
     <div class="contain">
       <div class="right">
-        <Table :fields="fields" :tableData="tableData" :tableButton="tableButton" @handle-selection-change="handleSelectionChange" @handle-table-button="handleTableButton"/>
+        <Table :fields="fields" :tableData="tableData.content" :tableButton="tableButton" @handle-selection-change="handleSelectionChange" @handle-table-button="handleTableButton"/>
       </div>
     </div>
     <div class="footer">
-      <pagination :total="50" @pagination="currentChange" />
+      <pagination :total="tableData.totalPages ? tableData.totalPages : 0" @pagination="currentChange" />
     </div>
 
-    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="buttonClick">
+    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="handleDialogButton">
       <div class="company-content__dialog__center">
-        <Form v-if="chooseTableButton.type === 'edit'" :formData="formData"/>
-        <div v-if="chooseTableButton.type === 'delete'">是否确认删除</div>
-        <System v-if="chooseTableButton.type === 'system'"/>
+        <Form ref="formRefs" v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'" :formData="newFormData" @handle-validate="handleValidate"/>
+        <div v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'">是否确认删除</div>
       </div>
     </Dialog>
 
@@ -29,249 +28,343 @@ import Table from '@/views/user/components/Table/index.vue'
 import Pagination from '@/components/Pagination/index.vue'
 import Dialog from '@/views/user/components/dialog/Dialog.vue'
 import Form from '@/views/user/components/Form/index.vue'
-import System from '@/views/user/department/components/System.vue'
+import { getDeptTree } from '@/api/department'
+import { getPermissionList, getPermissionDetail, postPermissionAdd, postPermissionUpdate, postPermissionDelete } from '@/api/limit'
+import { getSelectSysAdminListByCurrentUser } from '@/api/character'
 
 @Component({
-    components: { Search, Button, Table, Pagination, Dialog, Form, System }
+    components: { Search, Button, Table, Pagination, Dialog, Form }
 })
 export default class Page1 extends Vue {
   // table列表
+  deptList = {
+    pageIndex: 1,
+    length: 1000
+  }
   fields = [
     {
       prop: 'id',
       label: 'id'
     },
     {
-      prop: 'biaoshi',
+      prop: 'name',
       label: '权限名称'
     },
     {
-      prop: 'name',
+      prop: 'value',
       label: '权限值'
     },
     {
-      prop: 'beizhu',
+      prop: 'remark',
       label: '备注'
     },
   ]
-  tableData = [{
-    date: '2016-05-03',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    date: '2016-05-02',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    date: '2016-05-04',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    date: '2016-05-01',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    date: '2016-05-08',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    date: '2016-05-06',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }, {
-    date: '2016-05-07',
-    name: '王小虎',
-    address: '上海市普陀区金沙江路 1518 弄'
-  }]
+  tableData: any = {}
   tableButton = [
     {
       type: 'edit',
       name: '编辑',
       title: '编辑权限',
       buttonType: 'primary',
-      dialogButton: ['取消', '好的']
+      dialogButton: [
+        {
+          type: 'primary',
+          value: '确认'
+        },
+        {
+          type: 'info',
+          value: '取消'
+        }
+      ]
     },
     {
       type: 'delete',
       name: '删除',
       title: '确认删除',
       buttonType: 'danger',
-      dialogButton: ['确认', '取消']
+      dialogButton: [
+        {
+          type: 'primary',
+          value: '确认'
+        },
+        {
+          type: 'info',
+          value: '取消'
+        }
+      ]
     }
   ]
   selectList = []
-  handleSelectionChange(val: any){
-    console.log('handleSelectionChange---', val)
-    this.selectList = val
-  }
-  
+
   // 搜索框
-  searchList = [
+  searchList: any = [
     {
-      key: 'id',
-      name: '',
-      placeholder: 'id'
-    },
-    {
-      key: 'bumen',
+      type: 'Input',
+      key: 'name',
       name: '',
       placeholder: '权限名称'
     },
     {
-      key: 'biaoshi',
+      type: 'Input',
+      key: 'value',
       name: '',
       placeholder: '权限标识'
+    },
+    {
+      key: 'relSystemId',
+      type: 'Select',
+      name: '',
+      placeholder: '请选择所属系统',
+      label: []
     }
   ]
-  handleSearch(data: any) {
-    console.log('handleSearch--', data)
+
+  // 列表按钮控制
+  buttonList = [
+    {
+      key: 'delete',
+      name: '删除'
+    },
+    {
+      key: 'add',
+      name: '添加'
+    }
+  ]
+
+  // 弹窗
+  chooseTableButton: any = {}
+  formData: any = {
+    formList: [
+      {
+        key: 'relSystemId',
+        type: 'Select',
+        name: '所属系统',
+        data: '',
+        label: []
+      },
+      {
+        key: 'name',
+        type: 'Input',
+        name: '权限名称',
+        data: '',
+        placeholder: '请输入权限名称',
+        rules: [
+          { required: true, message: "请输入权限名称", trigger: "blur" }
+        ]
+      },
+      {
+        key: 'value',
+        type: 'Input',
+        name: '权限值',
+        data: '',
+        placeholder: '请输入权限值',
+        rules: [
+          { required: true, message: "请输入权限值", trigger: "blur" }
+        ]
+      },
+      {
+        key: 'fatherName',
+        type: 'tree',
+        name: '父级权限',
+        showCheckBox: false,
+        data: [],
+        defaultExpandKeys: [0],
+        defaultProps: {
+          children: 'deptVOS',
+          label: 'deptName'
+        }
+      },
+      {
+        key: 'type',
+        type: 'Radio',
+        name: '权限类型',
+        data: 0,
+        label: [
+          {
+            value: 0,
+            label: '目录'
+          },
+          {
+            value: 1,
+            label: '菜单'
+          },
+          {
+            value: 2,
+            label: '按钮'
+          }
+        ]
+      },
+      {
+        key: 'uri',
+        type: 'Input',
+        name: '前端路径',
+        data: '',
+        placeholder: '请输入前端路径',
+          rules: [
+            { required: true, message: "请输入前端路径", trigger: "blur" }
+          ]
+      },
+      {
+        key: 'icon',
+        type: 'Input',
+        name: '图标',
+        data: '',
+        placeholder: '请输入图标',
+          rules: [
+            { required: true, message: "请输入图标", trigger: "blur" }
+          ]
+      },
+      {
+        key: 'remark',
+        type: 'Textarea',
+        name: '备注',
+        data: '',
+        placeholder: '请输入备注',
+          rules: [
+            { required: true, message: "请输入备注", trigger: "blur" }
+          ]
+      }
+    ]
+  }
+  newFormData: any = {}
+  changeGoldDialog = false
+
+  mounted() {
+    this.getSelectSysAdminListByCurrentUser()
+    this.getDeptTree()
   }
 
-  // 左边系统展示
-  handleNavMenu(data: any) {
-    console.log('handleNavMenu---', data)
+  // 分页选择当前页
+  handleSelectionChange(val: any){
+    this.selectList = val
+  }
+  
+  // 搜索框
+  handleSearch(data: any) {
+    data.forEach((item: any)=>{
+      (this.deptList as any)[item.key] = item.name
+    })
+    this.getPermissionList()
   }
 
   // 分页选择
   currentChange(index: any) {
-    console.log('currentChange---', index)
+    this.deptList.pageIndex = index.page
+    this.deptList.length = index.limit
+    this.getPermissionList()
   }
 
-  // 列表按钮控制
-  buttonList = ['删除', '添加']
-  handleButton(index: any) {
-    console.log('handleButton---', index)
-    if(index === 0){
-      this.chooseTableButton = this.tableButton[1]
+  // 总体按钮点击弹窗
+  handleButton(type: any) {
+    if(type === 'delete'){
+      if(this.selectList.length === 0){
+        this.$message({
+          message: '请选择至少一名用户',
+          type: 'warning'
+        })
+        return
+      }
+      this.chooseTableButton = {
+        type: 'formdelete',
+        name: '删除',
+        title: '确认删除',
+        dialogButton: [
+          {
+            type: 'primary',
+            value: '确认'
+          },
+          {
+            type: 'info',
+            value: '取消'
+          }
+        ]
+      },
       this.changeGoldDialog = true
     }
     // 添加
-    if(index === 1){
+    if(type === 'add'){
       this.chooseTableButton = {
-        type: 'edit',
-        name: '编辑',
+        type: 'add',
+        name: '添加',
         title: '添加权限',
-        buttonType: 'primary',
-        dialogButton: ['取消', '好的']
+        dialogButton: [
+          {
+            type: 'primary',
+            value: '确认'
+          }
+        ]
       }
-      this.changeGoldDialog = true
-    }
-    // 设置管理员
-    if(index === 2){
-      this.chooseTableButton = {
-        type: 'system',
-        title: '设置管理员',
-        dialogButton: ['关闭']
-      }
+      this.newFormData = JSON.parse(JSON.stringify(this.formData))
       this.changeGoldDialog = true
     }
   }
 
-  // 弹窗
-  chooseTableButton = {}
-  formData: any[] = [
-    {
-      key: 'bumen',
-      type: 'Select',
-      name: '所属系统',
-      data: ''
-    },
-    {
-      key: 'name',
-      type: 'Input',
-      name: '权限名称',
-      data: ''
-    },
-    {
-      key: 'name',
-      type: 'Input',
-      name: '权限值',
-      data: ''
-    },
-    {
-      key: 'name',
-      type: 'tree',
-      name: '父级权限',
-      showCheckBox: false,
-      data: [{
-        label: '一级 1',
-        children: [{
-          label: '二级 1-1',
-          children: [{
-            label: '三级 1-1-1'
-          }]
-        }]
-      }, {
-        label: '一级 2',
-        children: [{
-          label: '二级 2-1',
-          children: [{
-            label: '三级 2-1-1'
-          }]
-        }, {
-          label: '二级 2-2',
-          children: [{
-            label: '三级 2-2-1'
-          }]
-        }]
-      }, {
-        label: '一级 3',
-        children: [{
-          label: '二级 3-1',
-          children: [{
-            label: '三级 3-1-1'
-          }]
-        }, {
-          label: '二级 3-2',
-          children: [{
-            label: '三级 3-2-1'
-          }]
-        }]
-      }],
-      defaultData: {
-        children: 'children',
-        label: 'label'
-      }
-    },
-    {
-      key: 'name',
-      type: 'Radio',
-      name: '权限类型',
-      data: '',
-      label: ['目录','菜单','按钮']
-    },
-    {
-      key: 'name',
-      type: 'Input',
-      name: '前端路径',
-      data: ''
-    },
-    {
-      key: 'name',
-      type: 'Input',
-      name: '图标',
-      data: ''
-    },
-    {
-      key: 'beizhu',
-      type: 'Textarea',
-      name: '备注',
-      data: ''
-    }
-  ]
-  changeGoldDialog = false
+  // table点击弹窗
   handleTableButton(val: any, item: any){
-    console.log('handleTableButton---', val)
-    console.log('index---', item)
-
+    item.id = val.id
     this.chooseTableButton = item
 
-    this.changeGoldDialog = true
+    if(item.type === 'edit'){
+      this.getPermissionDetail(val.id)
+    }else{
+      this.changeGoldDialog = true
+    }
   }
 
-  buttonClick(index: any) {
-    console.log('tijiao---', index)
-    this.changeGoldDialog = false
+  // 弹窗按钮点击
+  handleDialogButton(index: any) {
+    const type = this.chooseTableButton.type
+    switch(type)
+    {
+      case 'edit':
+        (this.$refs.formRefs as any).submitForm()
+        break
+      case 'delete':
+        this.handleDelete(index)
+        break
+      case 'formdelete':
+        this.handleFormdelete(index)
+        break
+      case 'add':
+        (this.$refs.formRefs as any).submitForm()
+        break
+      default:
+        this.changeGoldDialog = false
+    }
+  }
+
+  // 总体删除按钮
+  handleFormdelete(index: any) {
+    if(index === 0){
+      let idArr: any = []
+      this.selectList.forEach((item: any)=>{
+        idArr.push(item.id)
+      })
+      this.postPermissionDelete(idArr)
+    }
+  }
+
+  // 编辑/添加提交操作
+  handleValidate(arrId?: any){
+    let submitData: any = {}
+    this.updateData.formList.forEach((item: any)=>{
+      submitData[item.key] = item.data
+    })
+    if(this.chooseTableButton.id){
+      submitData.id = this.chooseTableButton.id
+      this.postPermissionUpdate(submitData)
+    }else{
+      this.postPermissionAdd(submitData)
+    }
+  }
+
+  // table删除单个角色
+  handleDelete(index: any) {
+    if(index === 0){
+      this.postPermissionDelete()
+    }else{
+      this.changeGoldDialog = false
+    }
   }
 
   close () {
@@ -279,10 +372,91 @@ export default class Page1 extends Vue {
   }
 
   // 监听form值变化
-  @Watch('formData',{immediate: true, deep: true})
+  updateData: any = {}
+  @Watch('newFormData',{immediate: true, deep: true})
   onChangeFormData(newVal: string[], oldVal: string){
-    // this.formData = Object.assign({},newVal)
-    console.log(newVal)
+    this.updateData = newVal
+  }
+
+  // 接口调取
+  // 获取系统列表
+  getSelectSysAdminListByCurrentUser(){
+    getSelectSysAdminListByCurrentUser().then((response: any) => {
+      this.searchList[2].name = response.data[0].id
+      response.data.forEach((item: any) => {
+        this.searchList[2].label.push(
+          {
+            value: item.id,
+            label: item.systemName
+          }
+        )
+      })
+      this.formData.formList[0].data = response.data[0].id
+      this.formData.formList[0].label = this.searchList[2].label
+    })
+  }
+  // 分页查询用户
+  getPermissionList() {
+    getPermissionList(this.deptList).then((response: any) => {
+      this.tableData = response.data
+    })
+  }
+
+  // 编辑按钮 回显
+  getPermissionDetail(data: any){
+    getPermissionDetail({ id: data }).then((response: any) => {
+      response.data.fatherName = 4
+      let defaultExpandKeys = 0
+      this.newFormData = JSON.parse(JSON.stringify(this.formData));
+      this.newFormData.formList.forEach((element: any) => {
+        if(element.key === 'fatherName'){
+          defaultExpandKeys = response.data[element.key]
+        }else{
+          element.data = response.data[element.key]
+        }
+      })
+      this.changeGoldDialog = true;
+      this.$nextTick(() => {
+        (this.$refs.formRefs as any).setCurrentKey(defaultExpandKeys)
+      })
+    })
+  }
+
+  // 添加权限提交
+  postPermissionAdd(data: any){
+    postPermissionAdd(data).then((response: any) => {
+      this.getPermissionList()
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 编辑提交
+  postPermissionUpdate(data: any) {
+    postPermissionUpdate(data).then((response: any) => {
+      this.getPermissionList()
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 删除列表
+  postPermissionDelete(arrId?: any) {
+    const id = arrId ? arrId : [this.chooseTableButton.id]
+    postPermissionDelete(id).then((response: any) => {
+      this.getPermissionList()
+      this.changeGoldDialog = false
+    })
+  }
+
+  // 分页查询部门树
+  getDeptTree() {
+    const params = {
+      pageNum: 1,
+      pageSize: 1000
+    }
+    getDeptTree(params).then((response: any) => {
+      const content = response.data.content
+      this.formData.formList[3].data = content
+    })
   }
 
 }

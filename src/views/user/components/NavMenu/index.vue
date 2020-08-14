@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-tree :data="data" :props="defaultProps" @node-click="$emit('handle-navmenu',$event)"></el-tree>
+    <el-tree :data="data" highlight-current :props="defaultProps" @node-click="$emit('handle-navmenu',$event)"></el-tree>
   </div>
 </template>
 <script lang="ts">

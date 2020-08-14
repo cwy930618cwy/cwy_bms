@@ -21,6 +21,8 @@ export default class Show extends Vue {
 .showList{
   text-align: left;
   margin-top: dim(20);
+  font-size: dim(20);
+  color: #606266;
   .item{
     margin-right: dim(10);
   }

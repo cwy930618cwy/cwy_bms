@@ -3,10 +3,7 @@
     <el-pagination
       background
       layout="prev, pager, next"
-      @size-change="$emit('size-change', $event)"
       @current-change="$emit('current-change', $event)"
-      @prev-click="$emit('prev-click', $event)"
-      @next-click	="$emit('next-click', $event)"
       :total="1000">
     </el-pagination>
   </div>

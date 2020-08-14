@@ -14,12 +14,12 @@
       <pagination :total="tableData.totalPages ? tableData.totalPages : 0" @pagination="currentChange" />
     </div>
 
-    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="buttonClick">
+    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="handleDialogButton">
       <div class="company-content__dialog__center">
         <Form ref="formRefs" v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'" :formData="newFormData" @handle-validate="handleValidate"/>
         <div v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'">是否确认删除</div>
         <Show v-if="chooseTableButton.type === 'show'" :formData="newFormData"/>
-        <System v-if="chooseTableButton.type === 'system'"/>
+        <System :parentId="deptList.parentId" v-if="chooseTableButton.type === 'system'"/>
       </div>
     </Dialog>
 
@@ -36,7 +36,7 @@ import Dialog from '@/views/user/components/dialog/Dialog.vue'
 import Form from '@/views/user/components/Form/index.vue'
 import Show from './components/Show.vue'
 import System from './components/System.vue'
-import { departmentList, departmentListPage, departmentDetail, departmentUpdate, departmentDelete } from '@/api/department'
+import { getDeptTree, postDeptList, getDeptDetail, postDeptUpdate, postDeptAdd, postDeptDelete } from '@/api/department'
 
 @Component({
     components: { Search, Button, NavMenu, Table, Pagination, Dialog, Form, Show, System }
@@ -112,11 +112,7 @@ export default class Page1 extends Vue {
   // 搜索框
   searchList = [
     {
-      key: 'id',
-      name: '',
-      placeholder: 'id'
-    },
-    {
+      type: 'Input',
       key: 'deptName',
       name: '',
       placeholder: '部门名称'
@@ -139,6 +135,7 @@ export default class Page1 extends Vue {
         type: 'Input',
         name: '部门名称',
         data: '',
+        placeholder: '请输入部门名称',
         rules: [
           { required: true, message: "请输入部门名称", trigger: "blur" }
         ]
@@ -167,6 +164,7 @@ export default class Page1 extends Vue {
         type: 'Input',
         name: '排序',
         data: '',
+        placeholder: '请输入排序',
         rules: [
           { required: true, message: "请输入排序", trigger: "blur" }
         ]
@@ -176,6 +174,7 @@ export default class Page1 extends Vue {
         type: 'Textarea',
         name: '备注',
         data: '',
+        placeholder: '请输入备注',
         rules: [
           { required: true, message: "请输入备注", trigger: "blur" }
         ]
@@ -186,51 +185,61 @@ export default class Page1 extends Vue {
   changeGoldDialog = false
 
   // 列表按钮控制
-  buttonList = ['删除', '添加', '设置部门系统管理员']
+  buttonList = [
+    {
+      key: 'delete',
+      name: '删除'
+    },
+    {
+      key: 'add',
+      name: '添加'
+    },
+    {
+      key: 'admin',
+      name: '设置部门系统管理员'
+    }
+  ]
 
   mounted() {
-    console.log('mounted---')
-    this.getUcDeptTree()
-    this.getUcDeptListPage()
+    this.getDeptTree()
   }
 
-  // table列表
+  // 分页选择当前页
   handleSelectionChange(val: any){
-    console.log('handleSelectionChange---', val)
     this.selectList = val
   }
   
   // 搜索框
   handleSearch(data: any) {
-    console.log('handleSearch--', data)
     data.forEach((item: any)=>{
       (this.deptList as any)[item.key] = item.name
     })
-    this.getUcDeptListPage()
+    this.postDeptList()
   }
 
   // 左边系统展示
   handleNavMenu(data: any) {
-    console.log('handleNavMenu---', data)
-    if(data.deptVOS.length <= 0){
-      console.log('diaojiekou--', data.id)
-      this.deptList.parentId = data.id
-      this.getUcDeptListPage()
-    }
+    this.deptList.parentId = data.id
+    this.postDeptList()
   }
 
   // 分页选择
   currentChange(index: any) {
-    console.log('currentChange---', index)
     this.deptList.pageIndex = index.page
     this.deptList.length = index.limit
-    this.getUcDeptListPage()
+    this.postDeptList()
   }
 
-  // 列表按钮控制
-  handleButton(index: any) {
-    console.log('handleButton---', index)
-    if(index === 0){
+  // 总体按钮点击弹窗
+  handleButton(type: any) {
+    if(type === 'delete'){
+      if(this.selectList.length === 0){
+        this.$message({
+          message: '请选择至少一名用户',
+          type: 'warning'
+        })
+        return
+      }
       this.chooseTableButton = {
         type: 'formdelete',
         name: '删除',
@@ -249,7 +258,7 @@ export default class Page1 extends Vue {
       this.changeGoldDialog = true
     }
     // 添加
-    if(index === 1){
+    if(type === 'add'){
       this.chooseTableButton = {
         type: 'add',
         name: '添加',
@@ -265,7 +274,7 @@ export default class Page1 extends Vue {
       this.changeGoldDialog = true
     }
     // 设置管理员
-    if(index === 2){
+    if(type === 'admin'){
       this.chooseTableButton = {
         type: 'system',
         title: '设置系统部门管理员',
@@ -280,29 +289,25 @@ export default class Page1 extends Vue {
     }
   }
 
-  // 弹窗
+  // table点击弹窗
   handleTableButton(val: any, item: any){
-    console.log('handleTableButton---', val)
-    console.log('index---', item)
     item.id = val.id
     this.chooseTableButton = item
 
     if(item.type === 'edit' || item.type === 'show'){
-      this.getdetailDept(val.id)
+      this.getDeptDetail(val.id)
     }else{
       this.changeGoldDialog = true
     }
   }
 
-  buttonClick(index: any) {
-    console.log('tijiao---', index)
+  // 弹窗按钮点击
+  handleDialogButton(index: any) {
     const type = this.chooseTableButton.type
-
-    console.log(type)
     switch(type)
     {
       case 'show':
-        this.handleShow()
+        this.changeGoldDialog = false
         break
       case 'edit':
         (this.$refs.formRefs as any).submitForm()
@@ -321,58 +326,43 @@ export default class Page1 extends Vue {
     }
   }
 
-  handleShow(){
-    console.log('handleShow---')
-    console.log('chooseTableButton---',this.chooseTableButton)
-    this.changeGoldDialog = false
-  }
-
-  handleDelete(index: any) {
-    console.log('handleDelete---')
-    if(index === 0){
-      console.log('确认删除------')
-      console.log('chooseTableButton---',this.chooseTableButton)
-      this.deleteDepartment()
-    }
-    this.changeGoldDialog = false
-  }
-
+  // 总体删除按钮
   handleFormdelete(index: any) {
-    console.log('handleFormdelete---')
     if(index === 0){
       let idArr: any = []
       this.selectList.forEach((item: any)=>{
         idArr.push(item.id)
       })
-      this.deleteDepartment(idArr)
+      this.postDeptDelete(idArr)
     }
+    this.changeGoldDialog = false
   }
 
-  handleFormAdd() {
-    console.log('handleFormAdd---')
-
-    console.log('handleValidate----hhhh', this.updateData)
+  // 编辑/添加提交操作
+  handleValidate(arrId: any){
     let submitData: any = {}
     this.updateData.formList.forEach((item: any)=>{
       submitData[item.key] = item.data
     })
+    if(this.chooseTableButton.id){
+      submitData.id = this.chooseTableButton.id
+      this.postDeptUpdate(submitData)
+    }else{
+      this.postDeptAdd(submitData)
+    }
+  }
 
-    console.log(submitData)
+  // 列表删除按钮
+  handleDelete(index: any) {
+    if(index === 0){
+      this.postDeptDelete()
+    }else{
+      this.changeGoldDialog = false
+    }
   }
 
   close () {
     this.changeGoldDialog = false
-  }
-
-  // 提交操作
-  handleValidate(arrId?: any){
-    console.log('handleValidate---')
-    let submitData: any = {}
-    this.updateData.formList.forEach((item: any)=>{
-      submitData[item.key] = item.data
-    })
-    submitData.id = this.chooseTableButton.id
-    this.postDepartmentUpdate(submitData)
   }
 
   // 监听form值变化
@@ -380,43 +370,35 @@ export default class Page1 extends Vue {
   @Watch('newFormData',{immediate: true, deep: true})
   onChangeFormData(newVal: string[], oldVal: string){
     this.updateData = newVal
-    console.log('newVal----', newVal)
   }
 
   // 接口调取
   // 分页查询部门树
-  getUcDeptTree() {
-    console.log('getUcDeptTree---')
+  getDeptTree() {
     const params = {
       pageNum: 1,
       pageSize: 1000
     }
-    departmentList(params).then((response: any) => {
-      console.log('jiekouhaole ---', response.data.content)
-      this.navMenuData = response.data.content
+    getDeptTree(params).then((response: any) => {
+      const content = response.data.content
+      this.navMenuData = content
+      this.deptList.parentId = content[0].id
+
+      this.postDeptList()
     })
   }
   // 分页查询部门
-  getUcDeptListPage() {
+  postDeptList() {
     const params = this.deptList
-
-    console.log('params---',params)
-  
-    // departmentListPage(params).then((response: any) => {
-    //   console.log('departmentListPage ---', response.data)
-    // })
-
-    const d = departmentListPage(params)
-
-    console.log('d',d)
-    this.tableData  = d
+    params.id = Number(params.id)
+    postDeptList(params).then((response: any) => {
+      this.tableData  = response.data
+    })
   }
 
   // 编辑按钮 回显
-  getdetailDept(id: any){
-    console.log('getdetailDept-----')
-
-    departmentDetail(id).then((response: any) => {
+  getDeptDetail(id: any){
+    getDeptDetail(id).then((response: any) => {
       this.newFormData = JSON.parse(JSON.stringify(this.formData));
       this.newFormData.formList.forEach((element: any) => {
         element.data = response.data[element.key]
@@ -425,21 +407,27 @@ export default class Page1 extends Vue {
     })
   }
 
+  // 添加部门提交
+  postDeptAdd(data: any){
+    postDeptAdd(data).then((response: any) => {
+      this.postDeptList()
+      this.changeGoldDialog = false
+    })
+  }
+
   // 编辑提交
-  postDepartmentUpdate(data: any) {
-    console.log('postDepartmentUpdate-----', data)
-    departmentUpdate(data).then((response: any) => {
-      console.log('resopn=--', response)
+  postDeptUpdate(data: any) {
+    postDeptUpdate(data).then((response: any) => {
+      this.postDeptList()
       this.changeGoldDialog = false
     })
   }
 
   // 删除列表
-  deleteDepartment(arrId?: any) {
-    console.log('deleteDepartment-----')
+  postDeptDelete(arrId?: any) {
     const id = arrId ? arrId : [this.chooseTableButton.id]
-    departmentDelete(id).then((response: any) => {
-      console.log('resopn=--', response)
+    postDeptDelete(id).then((response: any) => {
+      this.postDeptList()
       this.changeGoldDialog = false
     })
   }

@@ -19,7 +19,8 @@
       align="center"
       :label="item.label">
     </el-table-column>
-      <el-table-column
+    <el-table-column
+      v-if="tableButton.length >0"
       fixed="right"
       align="center"
       label="操作">

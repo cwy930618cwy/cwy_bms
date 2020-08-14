@@ -65,13 +65,14 @@ export default class Dialog extends Vue {
     opacity: 1;
     z-index: 12;
   }
+  &__contain::-webkit-scrollbar {display:none}
   &__content{
     // width: dim(420);
     min-width: dim(300);
     min-height: dim(160);
     display: flex;
     flex-direction: column;
-    align-items: center;
+    // align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
