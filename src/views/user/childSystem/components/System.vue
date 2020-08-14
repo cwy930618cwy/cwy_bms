@@ -1,19 +1,34 @@
 <template>
   <div class="system">
-    <Search :searchList="searchList" @handle-search="handleSearch"/>
-    <Button :buttonList="buttonList" @handle-button="handleButton"/>
+    <Search :searchList="searchList" @handle-search="handleSearch" />
+    <Button :buttonList="buttonList" @handle-button="handleButton" />
     <div class="contain">
       <div class="left">
-        <NavMenu :data="navMenuData" :defaultProps="navMenuProp" @handle-navmenu="handleNavMenu"/>
+        <NavMenu :data="navMenuData" :defaultProps="navMenuProp" @handle-navmenu="handleNavMenu" />
       </div>
       <div class="right">
-        <Table :fields="fields" :tableData="tableData.content" @handle-selection-change="handleSelectionChange"/>
+        <Table
+          :fields="fields"
+          :tableData="tableData.content"
+          @handle-selection-change="handleSelectionChange"
+        />
       </div>
     </div>
     <div class="footer">
-      <pagination :total="tableData.totalPages ? tableData.totalPages : 0" @pagination="currentChange" />
+      <pagination
+        :total="tableData.totalPages ? tableData.totalPages : 0"
+        @pagination="currentChange"
+      />
     </div>
-    <Dialog :width="chooseTableButton.width" v-if="changeGold" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="handleDialogButton">
+    <Dialog
+      :width="chooseTableButton.width"
+      v-if="changeGold"
+      :buttons="chooseTableButton.dialogButton"
+      class="company-content__dialog"
+      :title="chooseTableButton.title"
+      @close="close"
+      @button-click="handleDialogButton"
+    >
       <div class="company-content__dialog__center">
         <div>确定设置管理员</div>
       </div>
@@ -34,7 +49,7 @@ import { getDeptTree } from '@/api/department'
 import { postAllocationDeptSysAdmin } from '@/api/childSystem'
 
 @Component({
-  components: { Search, Table, Dialog, Form, Pagination, NavMenu, Button }
+  components: { Search, Table, Dialog, Form, Pagination, NavMenu, Button },
 })
 export default class Show extends Vue {
   @Prop({ default: () => [] }) parentId!: any
@@ -43,33 +58,33 @@ export default class Show extends Vue {
   userList = {
     pageIndex: 1,
     length: 1000,
-    deptId: 0
+    deptId: 0,
   }
   fields = [
     {
       prop: 'id',
-      label: 'id'
+      label: 'id',
     },
     {
       prop: 'username',
-      label: '用户名'
+      label: '用户名',
     },
     {
       prop: 'nickname',
-      label: '昵称'
+      label: '昵称',
     },
     {
       prop: 'phone',
-      label: '手机'
+      label: '手机',
     },
     {
       prop: 'email',
-      label: '邮箱'
+      label: '邮箱',
     },
     {
       prop: 'gender',
-      label: '性别'
-    }
+      label: '性别',
+    },
   ]
   tableData: any = []
   selectList = []
@@ -78,15 +93,15 @@ export default class Show extends Vue {
   buttonList = [
     {
       key: 'admin',
-      name: '设置管理员'
-    }
+      name: '设置管理员',
+    },
   ]
 
-   // 部门树侧边栏
+  // 部门树侧边栏
   navMenuData = []
   navMenuProp = {
     children: 'deptVOS',
-    label: 'deptName'
+    label: 'deptName',
   }
 
   // 搜索框
@@ -95,29 +110,30 @@ export default class Show extends Vue {
       type: 'Input',
       key: 'username',
       name: '',
-      placeholder: '用户名'
+      placeholder: '用户名',
     },
     {
       type: 'Input',
       key: 'phone',
       name: '',
-      placeholder: '手机'
-    }
+      placeholder: '手机',
+    },
   ]
 
   // 弹窗
   chooseTableButton: any = {}
   formSystemData: any = {
-  formList: [
-    {
-      key: 'bumen',
-      type: 'Checkbox',
-      name: '所属系统',
-      data: [],
-      rules: [],
-      defaultdata: []
-    }
-  ]}
+    formList: [
+      {
+        key: 'bumen',
+        type: 'Checkbox',
+        name: '所属系统',
+        data: [],
+        rules: [],
+        defaultdata: [],
+      },
+    ],
+  }
 
   changeGold = false
 
@@ -126,14 +142,14 @@ export default class Show extends Vue {
   }
 
   // 分页选择当前页
-  handleSelectionChange(val: any){
+  handleSelectionChange(val: any) {
     this.selectList = val
   }
 
   // 搜索框
   handleSearch(data: any) {
-    data.forEach((item: any)=>{
-      (this.userList as any)[item.key] = item.name
+    data.forEach((item: any) => {
+      ;(this.userList as any)[item.key] = item.name
     })
     this.postUserList()
   }
@@ -153,14 +169,14 @@ export default class Show extends Vue {
 
   // 总体按钮点击弹窗
   handleButton(index: any) {
-    if(this.selectList.length === 0){
+    if (this.selectList.length === 0) {
       this.$message({
         message: '请选择至少一名用户',
-        type: 'warning'
-      });
+        type: 'warning',
+      })
       return
     }
-    this.chooseTableButton = {
+    ;(this.chooseTableButton = {
       type: 'edit',
       name: '设置管理员',
       title: '设置管理员',
@@ -168,34 +184,34 @@ export default class Show extends Vue {
       dialogButton: [
         {
           type: 'primary',
-          value: '确认'
+          value: '确认',
         },
         {
           type: 'info',
-          value: '取消'
-        }
-      ]
-    },
-    this.changeGold = true
+          value: '取消',
+        },
+      ],
+    }),
+      (this.changeGold = true)
   }
 
   // 弹窗按钮点击
   handleDialogButton(index: any) {
-    if(index === 0){
+    if (index === 0) {
       this.postAllocationDeptSysAdmin()
-    }else{
+    } else {
       this.changeGold = false
     }
   }
 
-  close () {
+  close() {
     this.changeGold = false
   }
 
   // 监听form值变化
   updateSystemData: any = {}
-  @Watch('formSystemData',{immediate: true, deep: true})
-  onChangeFormData(newVal: string[], oldVal: string){
+  @Watch('formSystemData', { immediate: true, deep: true })
+  onChangeFormData(newVal: string[], oldVal: string) {
     this.updateSystemData = newVal
   }
 
@@ -204,7 +220,7 @@ export default class Show extends Vue {
   getUcDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000
+      pageSize: 1000,
     }
     getDeptTree(params).then((response: any) => {
       const content = response.data.content
@@ -221,50 +237,48 @@ export default class Show extends Vue {
   }
 
   // 确认分配系统管理员
-  postAllocationDeptSysAdmin(){
+  postAllocationDeptSysAdmin() {
     let idArr: any = []
-    this.selectList.forEach((item: any)=>{
+    this.selectList.forEach((item: any) => {
       idArr.push(item.id)
     })
     const params = {
       systemId: this.userList.deptId,
-      userIdList: idArr
+      userIdList: idArr,
     }
     postAllocationDeptSysAdmin(params).then((response: any) => {
       this.postUserList()
       this.changeGold = false
     })
   }
-
 }
 </script>
 <style lang="scss" scoped>
 @import '@/styles/functions.scss';
 @import '@/styles/mixins.scss';
 
-.system{
+.system {
   width: dim(900);
-  .contain{
+  .contain {
     width: 100%;
     display: flex;
     margin-bottom: dim(40);
-    .left{
+    .left {
       width: dim(200);
       border: dim(1) solid #eee;
     }
-    .right{
+    .right {
       padding: 0 dim(20);
       flex: 1;
       height: 100%;
     }
   }
-  .footer{
+  .footer {
     display: flex;
   }
-  ::v-deep .el-checkbox-group{
+  ::v-deep .el-checkbox-group {
     display: flex;
     flex-wrap: wrap;
   }
 }
-
 </style>

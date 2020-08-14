@@ -1,6 +1,11 @@
 <template>
   <div>
-    <el-tree :data="data" highlight-current :props="defaultProps" @node-click="$emit('handle-navmenu',$event)"></el-tree>
+    <el-tree
+      :data="data"
+      highlight-current
+      :props="defaultProps"
+      @node-click="$emit('handle-navmenu',$event)"
+    ></el-tree>
   </div>
 </template>
 <script lang="ts">
@@ -14,5 +19,4 @@ export default class NavMenu extends Vue {
 <style lang="scss" scoped>
 @import '@/styles/functions.scss';
 @import '@/styles/mixins.scss';
-
 </style>

@@ -1,23 +1,46 @@
 <template>
   <div class="page1">
-    <Search :searchList="searchList" @handle-search="handleSearch"/>
-    <Button :buttonList="buttonList" @handle-button="handleButton"/>
+    <Search :searchList="searchList" @handle-search="handleSearch" />
+    <Button :buttonList="buttonList" @handle-button="handleButton" />
     <div class="contain">
       <div class="right">
-        <Table :fields="fields" :tableData="tableData.content" :tableButton="tableButton" @handle-selection-change="handleSelectionChange" @handle-table-button="handleTableButton"/>
+        <Table
+          :fields="fields"
+          :tableData="tableData.content"
+          :tableButton="tableButton"
+          @handle-selection-change="handleSelectionChange"
+          @handle-table-button="handleTableButton"
+        />
       </div>
     </div>
     <div class="footer">
-      <pagination :total="tableData.totalPages ? tableData.totalPages : 0" @pagination="currentChange" />
+      <pagination
+        :total="tableData.totalPages ? tableData.totalPages : 0"
+        @pagination="currentChange"
+      />
     </div>
 
-    <Dialog :width="chooseTableButton.width" v-if="changeGoldDialog" :buttons="chooseTableButton.dialogButton" class="company-content__dialog" :title="chooseTableButton.title" @close="close" @button-click="handleDialogButton">
+    <Dialog
+      :width="chooseTableButton.width"
+      v-if="changeGoldDialog"
+      :buttons="chooseTableButton.dialogButton"
+      class="company-content__dialog"
+      :title="chooseTableButton.title"
+      @close="close"
+      @button-click="handleDialogButton"
+    >
       <div class="company-content__dialog__center">
-        <Form ref="formRefs" v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'" :formData="newFormData" @handle-validate="handleValidate"/>
-        <div v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'">是否确认删除</div>
+        <Form
+          ref="formRefs"
+          v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'"
+          :formData="newFormData"
+          @handle-validate="handleValidate"
+        />
+        <div
+          v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'"
+        >是否确认删除</div>
       </div>
     </Dialog>
-
   </div>
 </template>
 <script lang="ts">
@@ -29,34 +52,40 @@ import Pagination from '@/components/Pagination/index.vue'
 import Dialog from '@/views/user/components/dialog/Dialog.vue'
 import Form from '@/views/user/components/Form/index.vue'
 import { getDeptTree } from '@/api/department'
-import { getPermissionList, getPermissionDetail, postPermissionAdd, postPermissionUpdate, postPermissionDelete } from '@/api/limit'
+import {
+  getPermissionList,
+  getPermissionDetail,
+  postPermissionAdd,
+  postPermissionUpdate,
+  postPermissionDelete,
+} from '@/api/limit'
 import { getSelectSysAdminListByCurrentUser } from '@/api/character'
 
 @Component({
-    components: { Search, Button, Table, Pagination, Dialog, Form }
+  components: { Search, Button, Table, Pagination, Dialog, Form },
 })
 export default class Page1 extends Vue {
   // table列表
   deptList = {
     pageIndex: 1,
-    length: 1000
+    length: 1000,
   }
   fields = [
     {
       prop: 'id',
-      label: 'id'
+      label: 'id',
     },
     {
       prop: 'name',
-      label: '权限名称'
+      label: '权限名称',
     },
     {
       prop: 'value',
-      label: '权限值'
+      label: '权限值',
     },
     {
       prop: 'remark',
-      label: '备注'
+      label: '备注',
     },
   ]
   tableData: any = {}
@@ -69,13 +98,13 @@ export default class Page1 extends Vue {
       dialogButton: [
         {
           type: 'primary',
-          value: '确认'
+          value: '确认',
         },
         {
           type: 'info',
-          value: '取消'
-        }
-      ]
+          value: '取消',
+        },
+      ],
     },
     {
       type: 'delete',
@@ -85,14 +114,14 @@ export default class Page1 extends Vue {
       dialogButton: [
         {
           type: 'primary',
-          value: '确认'
+          value: '确认',
         },
         {
           type: 'info',
-          value: '取消'
-        }
-      ]
-    }
+          value: '取消',
+        },
+      ],
+    },
   ]
   selectList = []
 
@@ -102,33 +131,33 @@ export default class Page1 extends Vue {
       type: 'Input',
       key: 'name',
       name: '',
-      placeholder: '权限名称'
+      placeholder: '权限名称',
     },
     {
       type: 'Input',
       key: 'value',
       name: '',
-      placeholder: '权限标识'
+      placeholder: '权限标识',
     },
     {
       key: 'relSystemId',
       type: 'Select',
       name: '',
       placeholder: '请选择所属系统',
-      label: []
-    }
+      label: [],
+    },
   ]
 
   // 列表按钮控制
   buttonList = [
     {
       key: 'delete',
-      name: '删除'
+      name: '删除',
     },
     {
       key: 'add',
-      name: '添加'
-    }
+      name: '添加',
+    },
   ]
 
   // 弹窗
@@ -140,7 +169,7 @@ export default class Page1 extends Vue {
         type: 'Select',
         name: '所属系统',
         data: '',
-        label: []
+        label: [],
       },
       {
         key: 'name',
@@ -148,9 +177,7 @@ export default class Page1 extends Vue {
         name: '权限名称',
         data: '',
         placeholder: '请输入权限名称',
-        rules: [
-          { required: true, message: "请输入权限名称", trigger: "blur" }
-        ]
+        rules: [{ required: true, message: '请输入权限名称', trigger: 'blur' }],
       },
       {
         key: 'value',
@@ -158,9 +185,7 @@ export default class Page1 extends Vue {
         name: '权限值',
         data: '',
         placeholder: '请输入权限值',
-        rules: [
-          { required: true, message: "请输入权限值", trigger: "blur" }
-        ]
+        rules: [{ required: true, message: '请输入权限值', trigger: 'blur' }],
       },
       {
         key: 'fatherName',
@@ -171,8 +196,8 @@ export default class Page1 extends Vue {
         defaultExpandKeys: [0],
         defaultProps: {
           children: 'deptVOS',
-          label: 'deptName'
-        }
+          label: 'deptName',
+        },
       },
       {
         key: 'type',
@@ -182,17 +207,17 @@ export default class Page1 extends Vue {
         label: [
           {
             value: 0,
-            label: '目录'
+            label: '目录',
           },
           {
             value: 1,
-            label: '菜单'
+            label: '菜单',
           },
           {
             value: 2,
-            label: '按钮'
-          }
-        ]
+            label: '按钮',
+          },
+        ],
       },
       {
         key: 'uri',
@@ -200,9 +225,7 @@ export default class Page1 extends Vue {
         name: '前端路径',
         data: '',
         placeholder: '请输入前端路径',
-          rules: [
-            { required: true, message: "请输入前端路径", trigger: "blur" }
-          ]
+        rules: [{ required: true, message: '请输入前端路径', trigger: 'blur' }],
       },
       {
         key: 'icon',
@@ -210,9 +233,7 @@ export default class Page1 extends Vue {
         name: '图标',
         data: '',
         placeholder: '请输入图标',
-          rules: [
-            { required: true, message: "请输入图标", trigger: "blur" }
-          ]
+        rules: [{ required: true, message: '请输入图标', trigger: 'blur' }],
       },
       {
         key: 'remark',
@@ -220,11 +241,9 @@ export default class Page1 extends Vue {
         name: '备注',
         data: '',
         placeholder: '请输入备注',
-          rules: [
-            { required: true, message: "请输入备注", trigger: "blur" }
-          ]
-      }
-    ]
+        rules: [{ required: true, message: '请输入备注', trigger: 'blur' }],
+      },
+    ],
   }
   newFormData: any = {}
   changeGoldDialog = false
@@ -235,14 +254,14 @@ export default class Page1 extends Vue {
   }
 
   // 分页选择当前页
-  handleSelectionChange(val: any){
+  handleSelectionChange(val: any) {
     this.selectList = val
   }
-  
+
   // 搜索框
   handleSearch(data: any) {
-    data.forEach((item: any)=>{
-      (this.deptList as any)[item.key] = item.name
+    data.forEach((item: any) => {
+      ;(this.deptList as any)[item.key] = item.name
     })
     this.getPermissionList()
   }
@@ -256,33 +275,33 @@ export default class Page1 extends Vue {
 
   // 总体按钮点击弹窗
   handleButton(type: any) {
-    if(type === 'delete'){
-      if(this.selectList.length === 0){
+    if (type === 'delete') {
+      if (this.selectList.length === 0) {
         this.$message({
           message: '请选择至少一名用户',
-          type: 'warning'
+          type: 'warning',
         })
         return
       }
-      this.chooseTableButton = {
+      ;(this.chooseTableButton = {
         type: 'formdelete',
         name: '删除',
         title: '确认删除',
         dialogButton: [
           {
             type: 'primary',
-            value: '确认'
+            value: '确认',
           },
           {
             type: 'info',
-            value: '取消'
-          }
-        ]
-      },
-      this.changeGoldDialog = true
+            value: '取消',
+          },
+        ],
+      }),
+        (this.changeGoldDialog = true)
     }
     // 添加
-    if(type === 'add'){
+    if (type === 'add') {
       this.chooseTableButton = {
         type: 'add',
         name: '添加',
@@ -290,9 +309,9 @@ export default class Page1 extends Vue {
         dialogButton: [
           {
             type: 'primary',
-            value: '确认'
-          }
-        ]
+            value: '确认',
+          },
+        ],
       }
       this.newFormData = JSON.parse(JSON.stringify(this.formData))
       this.changeGoldDialog = true
@@ -300,13 +319,13 @@ export default class Page1 extends Vue {
   }
 
   // table点击弹窗
-  handleTableButton(val: any, item: any){
+  handleTableButton(val: any, item: any) {
     item.id = val.id
     this.chooseTableButton = item
 
-    if(item.type === 'edit'){
+    if (item.type === 'edit') {
       this.getPermissionDetail(val.id)
-    }else{
+    } else {
       this.changeGoldDialog = true
     }
   }
@@ -314,10 +333,9 @@ export default class Page1 extends Vue {
   // 弹窗按钮点击
   handleDialogButton(index: any) {
     const type = this.chooseTableButton.type
-    switch(type)
-    {
+    switch (type) {
       case 'edit':
-        (this.$refs.formRefs as any).submitForm()
+        ;(this.$refs.formRefs as any).submitForm()
         break
       case 'delete':
         this.handleDelete(index)
@@ -326,7 +344,7 @@ export default class Page1 extends Vue {
         this.handleFormdelete(index)
         break
       case 'add':
-        (this.$refs.formRefs as any).submitForm()
+        ;(this.$refs.formRefs as any).submitForm()
         break
       default:
         this.changeGoldDialog = false
@@ -335,9 +353,9 @@ export default class Page1 extends Vue {
 
   // 总体删除按钮
   handleFormdelete(index: any) {
-    if(index === 0){
+    if (index === 0) {
       let idArr: any = []
-      this.selectList.forEach((item: any)=>{
+      this.selectList.forEach((item: any) => {
         idArr.push(item.id)
       })
       this.postPermissionDelete(idArr)
@@ -345,51 +363,49 @@ export default class Page1 extends Vue {
   }
 
   // 编辑/添加提交操作
-  handleValidate(arrId?: any){
+  handleValidate(arrId?: any) {
     let submitData: any = {}
-    this.updateData.formList.forEach((item: any)=>{
+    this.updateData.formList.forEach((item: any) => {
       submitData[item.key] = item.data
     })
-    if(this.chooseTableButton.id){
+    if (this.chooseTableButton.id) {
       submitData.id = this.chooseTableButton.id
       this.postPermissionUpdate(submitData)
-    }else{
+    } else {
       this.postPermissionAdd(submitData)
     }
   }
 
   // table删除单个角色
   handleDelete(index: any) {
-    if(index === 0){
+    if (index === 0) {
       this.postPermissionDelete()
-    }else{
+    } else {
       this.changeGoldDialog = false
     }
   }
 
-  close () {
+  close() {
     this.changeGoldDialog = false
   }
 
   // 监听form值变化
   updateData: any = {}
-  @Watch('newFormData',{immediate: true, deep: true})
-  onChangeFormData(newVal: string[], oldVal: string){
+  @Watch('newFormData', { immediate: true, deep: true })
+  onChangeFormData(newVal: string[], oldVal: string) {
     this.updateData = newVal
   }
 
   // 接口调取
   // 获取权限列表
-  getSelectSysAdminListByCurrentUser(){
+  getSelectSysAdminListByCurrentUser() {
     getSelectSysAdminListByCurrentUser().then((response: any) => {
       this.searchList[2].name = response.data[0].id
       response.data.forEach((item: any) => {
-        this.searchList[2].label.push(
-          {
-            value: item.id,
-            label: item.systemName
-          }
-        )
+        this.searchList[2].label.push({
+          value: item.id,
+          label: item.systemName,
+        })
       })
       this.formData.formList[0].data = response.data[0].id
       this.formData.formList[0].label = this.searchList[2].label
@@ -403,27 +419,27 @@ export default class Page1 extends Vue {
   }
 
   // 编辑按钮 回显
-  getPermissionDetail(data: any){
+  getPermissionDetail(data: any) {
     getPermissionDetail({ id: data }).then((response: any) => {
       response.data.fatherName = 4
       let defaultExpandKeys = 0
-      this.newFormData = JSON.parse(JSON.stringify(this.formData));
+      this.newFormData = JSON.parse(JSON.stringify(this.formData))
       this.newFormData.formList.forEach((element: any) => {
-        if(element.key === 'fatherName'){
+        if (element.key === 'fatherName') {
           defaultExpandKeys = response.data[element.key]
-        }else{
+        } else {
           element.data = response.data[element.key]
         }
       })
-      this.changeGoldDialog = true;
+      this.changeGoldDialog = true
       this.$nextTick(() => {
-        (this.$refs.formRefs as any).setCurrentKey(defaultExpandKeys)
+        ;(this.$refs.formRefs as any).setCurrentKey(defaultExpandKeys)
       })
     })
   }
 
   // 添加权限提交
-  postPermissionAdd(data: any){
+  postPermissionAdd(data: any) {
     postPermissionAdd(data).then((response: any) => {
       this.getPermissionList()
       this.changeGoldDialog = false
@@ -451,33 +467,32 @@ export default class Page1 extends Vue {
   getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000
+      pageSize: 1000,
     }
     getDeptTree(params).then((response: any) => {
       const content = response.data.content
       this.formData.formList[3].data = content
     })
   }
-
 }
 </script>
 <style lang="scss" scoped>
 @import '@/styles/functions.scss';
 @import '@/styles/mixins.scss';
 
-.page1{
+.page1 {
   background: white;
   padding: dim(30) dim(20);
   position: relative;
-  .contain{
+  .contain {
     width: 100%;
     display: flex;
     margin-bottom: dim(40);
-    .left{
+    .left {
       width: dim(160);
       border: dim(1) solid #eee;
     }
-    .right{
+    .right {
       padding: 0 dim(20);
       flex: 1;
       height: 100%;

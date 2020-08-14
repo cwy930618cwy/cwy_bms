@@ -1,6 +1,6 @@
 <template>
   <div id="app" class="app">
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
@@ -8,16 +8,15 @@
 import { Vue, Component } from 'vue-property-decorator'
 
 @Component({
-  components: { }
+  components: {},
 })
-export default class App extends Vue {
-}
-
+export default class App extends Vue {}
 </script>
 
 
 <style lang="scss">
-html, body {
+html,
+body {
   padding: 0;
   margin: 0;
   height: 100vh;
@@ -29,11 +28,11 @@ html, body {
   box-sizing: border-box;
 }
 .app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100%;
-  background: #F7F7FA;
+  background: #f7f7fa;
   overflow: scroll;
 }
 </style>
