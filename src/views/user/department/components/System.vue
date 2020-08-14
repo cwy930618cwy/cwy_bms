@@ -196,8 +196,8 @@ export default class Show extends Vue {
   // 选择子系统确认
   getAllocationDeptSysAdmin() {
     const data = {
-      systemId: this.chooseTableButton.id,
-      userIdList: this.updateSystemData.formList[0].data,
+      userIdList: [this.chooseTableButton.id],
+      systemIdList: this.updateSystemData.formList[0].data,
     }
     getAllocationDeptSysAdmin(data).then((response: any) => {
       this.changeGold = false

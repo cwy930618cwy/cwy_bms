@@ -638,6 +638,7 @@ export default class Page1 extends Vue {
       id.push(item.id)
     })
     postResetPassword(id).then((response: any) => {
+      this.postUserList()
       this.changeGoldDialog = false
     })
   }

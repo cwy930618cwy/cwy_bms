@@ -46,7 +46,7 @@ import Form from '@/views/user/components/Form/index.vue'
 import Pagination from '@/components/Pagination/index.vue'
 import { postUserList } from '@/api/department'
 import { getDeptTree } from '@/api/department'
-import { postAllocationDeptSysAdmin } from '@/api/childSystem'
+import { postAllocationSysAdmin } from '@/api/childSystem'
 
 @Component({
   components: { Search, Table, Dialog, Form, Pagination, NavMenu, Button },
@@ -198,7 +198,7 @@ export default class Show extends Vue {
   // 弹窗按钮点击
   handleDialogButton(index: any) {
     if (index === 0) {
-      this.postAllocationDeptSysAdmin()
+      this.postAllocationSysAdmin()
     } else {
       this.changeGold = false
     }
@@ -237,16 +237,18 @@ export default class Show extends Vue {
   }
 
   // 确认分配系统管理员
-  postAllocationDeptSysAdmin() {
+  postAllocationSysAdmin() {
     let idArr: any = []
     this.selectList.forEach((item: any) => {
       idArr.push(item.id)
     })
     const params = {
-      systemId: this.userList.deptId,
+      systemIdList: [this.userList.deptId],
       userIdList: idArr,
     }
-    postAllocationDeptSysAdmin(params).then((response: any) => {
+    console.log('sss', params)
+
+    postAllocationSysAdmin(params).then((response: any) => {
       this.postUserList()
       this.changeGold = false
     })

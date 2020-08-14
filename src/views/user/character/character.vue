@@ -39,7 +39,12 @@
         <div
           v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'"
         >是否确认删除</div>
-        <Form ref="showRefs" v-if="chooseTableButton.type === 'allocation'" :formData="showData" />
+        <Form
+          ref="showRefs"
+          v-if="chooseTableButton.type === 'allocation'"
+          :formData="showData"
+          @getCheckedKeys="handleCheckedKeys"
+        />
       </div>
     </Dialog>
   </div>
@@ -206,9 +211,10 @@ export default class Page1 extends Vue {
         showCheckBox: true,
         name: '分配权限',
         data: [],
+        defaultExpandKeys: [0],
         defaultProps: {
-          children: 'deptVOS',
-          label: 'deptName',
+          children: 'children',
+          label: 'name',
         },
       },
     ],
@@ -350,11 +356,7 @@ export default class Page1 extends Vue {
 
   // 分配权限
   handleAllocation() {
-    let submitData: any = {}
-    this.updateShowData.formList.forEach((item: any) => {
-      submitData[item.key] = item.data
-    })
-    this.getAddUcRolePermissionRelation(submitData)
+    ;(this.$refs.showRefs as any).getCheckedKeys()
   }
 
   // table删除单个角色
@@ -364,6 +366,11 @@ export default class Page1 extends Vue {
     } else {
       this.changeGoldDialog = false
     }
+  }
+
+  // 树组件回调
+  handleCheckedKeys(treeData: any) {
+    this.getAddUcRolePermissionRelation(treeData)
   }
 
   close() {
@@ -407,35 +414,22 @@ export default class Page1 extends Vue {
 
   // 授权角色
   getSelectPermissionByRoleId(data: any) {
-    // getSelectPermissionByRoleId({ id: data }).then((response: any) => {
-    //   console.log('getSelectPermissionByRoleId----')
-    //   this.changeGoldDialog = true
-    // })
-
-    const params = {
-      pageNum: 1,
-      pageSize: 1000,
-    }
-    const self = this
-    getDeptTree(params).then((response: any) => {
-      const content = response.data.content
-      this.showData.formList[0].data = content
+    getSelectPermissionByRoleId({ id: data }).then((response: any) => {
+      this.showData.formList[0].data = response.data.permissionTree
+      const defaultExpandKeys = response.data.haveIdList
       this.changeGoldDialog = true
-
-      self.$nextTick(() => {
-        ;(self.$refs.showRefs as any).setCheckedKeys([4])
-      })
+      if (!!response.data.haveIdList) {
+        this.$nextTick(() => {
+          ;(this.$refs.showRefs as any).setCheckedKeys(defaultExpandKeys)
+        })
+      }
     })
   }
 
   // 给角色授权权限
   getAddUcRolePermissionRelation(data: any) {
-    const idArr: any = []
-    data.fatherName.forEach((element: any) => {
-      idArr.push(element.id)
-    })
     const params = {
-      permissionIdList: idArr,
+      permissionIdList: data,
       roleId: this.chooseTableButton.id,
     }
     getAddUcRolePermissionRelation(params).then((response: any) => {

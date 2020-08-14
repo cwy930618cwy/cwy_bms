@@ -59,6 +59,7 @@
             node-key="id"
             default-expand-all
             :props="item.defaultProps"
+            @node-click="nodeClick"
           ></el-tree>
           <!-- 图片上传 -->
           <Upload :style="{ textAlign: 'left' }" v-if="item.type === 'upload'" v-model="item.data" />
@@ -83,6 +84,15 @@ import Upload from '@/views/user/components/Upload/index.vue'
 export default class Form extends Vue {
   @Prop({ default: () => [] }) formData!: any
 
+  nodeClick(index: any) {
+    this.$emit('node-click', index)
+  }
+
+  getCheckedKeys() {
+    const treeKeys = (this.$refs.tree as any)[0].getCheckedKeys()
+    this.$emit('getCheckedKeys', treeKeys)
+  }
+
   setCheckedKeys(index: any) {
     ;(this.$refs.tree as any)[0].setCheckedKeys(index)
   }
@@ -96,7 +106,6 @@ export default class Form extends Vue {
       if (valid) {
         this.$emit('handle-validate')
       } else {
-        console.log('false')
         return false
       }
     })

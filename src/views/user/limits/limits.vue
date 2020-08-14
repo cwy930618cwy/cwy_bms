@@ -35,6 +35,7 @@
           v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'"
           :formData="newFormData"
           @handle-validate="handleValidate"
+          @node-click="handleNodeClick"
         />
         <div
           v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'"
@@ -188,7 +189,7 @@ export default class Page1 extends Vue {
         rules: [{ required: true, message: '请输入权限值', trigger: 'blur' }],
       },
       {
-        key: 'fatherName',
+        key: 'parentId',
         type: 'tree',
         name: '父级权限',
         showCheckBox: false,
@@ -366,7 +367,11 @@ export default class Page1 extends Vue {
   handleValidate(arrId?: any) {
     let submitData: any = {}
     this.updateData.formList.forEach((item: any) => {
-      submitData[item.key] = item.data
+      if (item.key == 'parentId') {
+        submitData.parentId = item.defaultExpandKeys
+      } else {
+        submitData[item.key] = item.data
+      }
     })
     if (this.chooseTableButton.id) {
       submitData.id = this.chooseTableButton.id
@@ -383,6 +388,11 @@ export default class Page1 extends Vue {
     } else {
       this.changeGoldDialog = false
     }
+  }
+
+  // 树组件回调
+  handleNodeClick(index: any) {
+    this.updateData.formList[3].defaultExpandKeys = index.id
   }
 
   close() {
@@ -421,20 +431,21 @@ export default class Page1 extends Vue {
   // 编辑按钮 回显
   getPermissionDetail(data: any) {
     getPermissionDetail({ id: data }).then((response: any) => {
-      response.data.fatherName = 4
       let defaultExpandKeys = 0
       this.newFormData = JSON.parse(JSON.stringify(this.formData))
       this.newFormData.formList.forEach((element: any) => {
-        if (element.key === 'fatherName') {
+        if (element.key === 'parentId') {
           defaultExpandKeys = response.data[element.key]
         } else {
           element.data = response.data[element.key]
         }
       })
       this.changeGoldDialog = true
-      this.$nextTick(() => {
-        ;(this.$refs.formRefs as any).setCurrentKey(defaultExpandKeys)
-      })
+      if (!!response.data.parentId) {
+        this.$nextTick(() => {
+          ;(this.$refs.formRefs as any).setCurrentKey(defaultExpandKeys)
+        })
+      }
     })
   }
 
