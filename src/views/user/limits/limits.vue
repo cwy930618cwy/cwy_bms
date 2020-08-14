@@ -379,7 +379,7 @@ export default class Page1 extends Vue {
   }
 
   // 接口调取
-  // 获取系统列表
+  // 获取权限列表
   getSelectSysAdminListByCurrentUser(){
     getSelectSysAdminListByCurrentUser().then((response: any) => {
       this.searchList[2].name = response.data[0].id
@@ -395,7 +395,7 @@ export default class Page1 extends Vue {
       this.formData.formList[0].label = this.searchList[2].label
     })
   }
-  // 分页查询用户
+  // 分页查询权限
   getPermissionList() {
     getPermissionList(this.deptList).then((response: any) => {
       this.tableData = response.data

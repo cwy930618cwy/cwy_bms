@@ -358,7 +358,7 @@ export default class Page1 extends Vue {
   }
 
   // 接口调取
-  // 获取系统列表
+  // 获取角色列表
   getSelectSysAdminListByCurrentUser(){
     getSelectSysAdminListByCurrentUser().then((response: any) => {
       this.searchList[1].name = response.data[0].id
@@ -374,7 +374,7 @@ export default class Page1 extends Vue {
       this.formData.formList[0].label = this.searchList[1].label
     })
   }
-  // 分页查询用户
+  // 分页查询角色
   getRoleList() {
     getRoleList(this.deptList).then((response: any) => {
       this.tableData = response.data
@@ -430,7 +430,7 @@ export default class Page1 extends Vue {
     })
   }
 
-  // 添加用户提交
+  // 添加角色提交
   postRoleAdd(data: any){
     postRoleAdd(data).then((response: any) => {
       this.getRoleList()

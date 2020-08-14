@@ -351,7 +351,7 @@ export default class Page1 extends Vue {
   }
 
   // 接口调取
-  // 分页查询用户
+  // 分页查询子系统
   getSystemList() {
     getSystemList(this.deptList).then((response: any) => {
       this.tableData  = response.data
