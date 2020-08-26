@@ -1,14 +1,13 @@
 <template>
     <div class="components_handleList">
-      <el-button>删除</el-button>
-      <el-button>添加</el-button>
+      <el-button v-for="(item, index) in buttonList" :key="index" @click="$emit('handle-button', index)">{{item}}</el-button>
     </div>
 </template>
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
+import { Vue, Component, Prop } from 'vue-property-decorator'
 @Component
-export default class HandleList extends Vue {
-  
+export default class Button extends Vue {
+  @Prop({ default: () => [] }) buttonList!: string[]
 
 }
 </script>
