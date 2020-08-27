@@ -4,11 +4,7 @@
     <Button :buttonList="buttonList" @handle-button="handleButton" />
     <div class="contain">
       <div class="left">
-        <NavMenu
-          :data="navMenuData"
-          :defaultProps="navMenuProp"
-          @handle-navmenu="handleNavMenu"
-        />
+        <NavMenu :data="navMenuData" :defaultProps="navMenuProp" @handle-navmenu="handleNavMenu" />
       </div>
       <div class="right">
         <Table
@@ -51,9 +47,7 @@
             (chooseTableButton.type === 'delete') |
               (chooseTableButton.type === 'formdelete')
           "
-        >
-          是否确认删除
-        </div>
+        >是否确认删除</div>
         <div v-if="chooseTableButton.type === 'password'">新手机号为后6位</div>
         <Form
           v-if="chooseTableButton.type === 'accredit'"
@@ -66,14 +60,17 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
-import Search from "@/components/Search/index.vue";
-import Button from "@/components/Button/index.vue";
-import NavMenu from "@/components/NavMenu/index.vue";
-import Table from "@/components/Table/index.vue";
-import Pagination from "@/components/Pagination/index.vue";
-import Dialog from "@/components/dialog/Dialog.vue";
-import Form from "@/components/Form/index.vue";
 import { getDeptTree, postUserList } from "@/api/department";
+
+import {
+  Search,
+  Button,
+  NavMenu,
+  Table,
+  Pagination,
+  Dialog,
+  Form,
+} from "components";
 import {
   getUserDetail,
   postResetPassword,
@@ -82,44 +79,42 @@ import {
   deleteUserBatch,
   postUserRoles,
   getSelectRoleListByUserIdAndSysId,
-  getSelectDeptSysAdminListByCurrentUser
+  getSelectDeptSysAdminListByCurrentUser,
 } from "@/api/childUser";
 
-@Component({
-  components: { Search, Button, NavMenu, Table, Pagination, Dialog, Form }
-})
+@Component
 export default class Page1 extends Vue {
   // table列表
   deptList = {
     pageIndex: 1,
     length: 1000,
-    deptId: 0
+    deptId: 0,
   };
   fields = [
     {
       prop: "id",
-      label: "id"
+      label: "id",
     },
     {
       prop: "username",
-      label: "用户名"
+      label: "用户名",
     },
     {
       prop: "nickname",
-      label: "昵称"
+      label: "昵称",
     },
     {
       prop: "phone",
-      label: "手机"
+      label: "手机",
     },
     {
       prop: "email",
-      label: "邮箱"
+      label: "邮箱",
     },
     {
       prop: "gender",
-      label: "性别"
-    }
+      label: "性别",
+    },
   ];
   tableData: any = {};
   tableButton = [
@@ -131,9 +126,9 @@ export default class Page1 extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
-        }
-      ]
+          value: "确认",
+        },
+      ],
     },
     {
       type: "edit",
@@ -143,13 +138,13 @@ export default class Page1 extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
+          value: "确认",
         },
         {
           type: "info",
-          value: "取消"
-        }
-      ]
+          value: "取消",
+        },
+      ],
     },
     {
       type: "delete",
@@ -159,14 +154,14 @@ export default class Page1 extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
+          value: "确认",
         },
         {
           type: "info",
-          value: "取消"
-        }
-      ]
-    }
+          value: "取消",
+        },
+      ],
+    },
   ];
   selectList = [];
 
@@ -176,37 +171,37 @@ export default class Page1 extends Vue {
       type: "Input",
       key: "username",
       name: "",
-      placeholder: "用户名"
+      placeholder: "用户名",
     },
     {
       type: "Input",
       key: "phone",
       name: "",
-      placeholder: "手机"
-    }
+      placeholder: "手机",
+    },
   ];
 
   // 列表按钮控制
   buttonList = [
     {
       key: "delete",
-      name: "删除"
+      name: "删除",
     },
     {
       key: "add",
-      name: "添加"
+      name: "添加",
     },
     {
       key: "password",
-      name: "重置密码"
-    }
+      name: "重置密码",
+    },
   ];
 
   // 部门树侧边栏
   navMenuData = [];
   navMenuProp = {
     children: "deptVOS",
-    label: "deptName"
+    label: "deptName",
   };
 
   // 弹窗
@@ -219,7 +214,7 @@ export default class Page1 extends Vue {
         name: "用户名",
         data: "",
         placeholder: "请输入用户名",
-        rules: [{ required: true, message: "请输入用户名", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入用户名", trigger: "blur" }],
       },
       {
         key: "password",
@@ -227,7 +222,7 @@ export default class Page1 extends Vue {
         name: "密码",
         data: "",
         placeholder: "请输入密码",
-        rules: [{ required: true, message: "请输入密码", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入密码", trigger: "blur" }],
       },
       {
         key: "nickname",
@@ -235,7 +230,7 @@ export default class Page1 extends Vue {
         name: "昵称",
         data: "",
         placeholder: "请输入昵称",
-        rules: [{ required: true, message: "请输入昵称", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入昵称", trigger: "blur" }],
       },
       {
         key: "phone",
@@ -243,7 +238,7 @@ export default class Page1 extends Vue {
         name: "手机",
         data: "",
         placeholder: "请输入手机",
-        rules: [{ required: true, message: "请输入手机", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入手机", trigger: "blur" }],
       },
       {
         key: "email",
@@ -251,7 +246,7 @@ export default class Page1 extends Vue {
         name: "邮箱",
         data: "",
         placeholder: "请输入邮箱",
-        rules: [{ required: true, message: "请输入邮箱", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入邮箱", trigger: "blur" }],
       },
       // {
       //   key: 'avatar',
@@ -267,14 +262,14 @@ export default class Page1 extends Vue {
         label: [
           {
             value: 1,
-            label: "男"
+            label: "男",
           },
           {
             value: 2,
-            label: "女"
-          }
+            label: "女",
+          },
         ],
-        rules: [{ required: true, message: "请输入性别", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入性别", trigger: "blur" }],
       },
       {
         key: "city",
@@ -282,7 +277,7 @@ export default class Page1 extends Vue {
         name: "城市",
         data: "",
         placeholder: "请输入城市",
-        rules: [{ required: true, message: "请输入城市", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入城市", trigger: "blur" }],
       },
       {
         key: "job",
@@ -290,7 +285,7 @@ export default class Page1 extends Vue {
         name: "职业",
         data: "",
         placeholder: "请输入职业",
-        rules: [{ required: true, message: "请输入职业", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入职业", trigger: "blur" }],
       },
       {
         key: "personalizedSignature",
@@ -298,9 +293,9 @@ export default class Page1 extends Vue {
         name: "个性签名",
         data: "",
         placeholder: "请输入个性签名",
-        rules: [{ required: true, message: "请输入个性签名", trigger: "blur" }]
-      }
-    ]
+        rules: [{ required: true, message: "请输入个性签名", trigger: "blur" }],
+      },
+    ],
   };
   showData: any = {
     formList: [
@@ -309,16 +304,16 @@ export default class Page1 extends Vue {
         type: "Select",
         name: "选择系统",
         data: "",
-        label: []
+        label: [],
       },
       {
         key: "roleIds",
         type: "transfer",
         name: "角色授权",
         defaultdata: [],
-        data: []
-      }
-    ]
+        data: [],
+      },
+    ],
   };
   newFormData: any = {};
   changeGoldDialog = false;
@@ -359,7 +354,7 @@ export default class Page1 extends Vue {
       if (this.selectList.length === 0) {
         this.$message({
           message: "请选择至少一名用户",
-          type: "warning"
+          type: "warning",
         });
         return;
       }
@@ -370,13 +365,13 @@ export default class Page1 extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
+            value: "确认",
           },
           {
             type: "info",
-            value: "取消"
-          }
-        ]
+            value: "取消",
+          },
+        ],
       }),
         (this.changeGoldDialog = true);
     }
@@ -389,9 +384,9 @@ export default class Page1 extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
-          }
-        ]
+            value: "确认",
+          },
+        ],
       };
       this.newFormData = JSON.parse(JSON.stringify(this.formData));
       this.changeGoldDialog = true;
@@ -401,7 +396,7 @@ export default class Page1 extends Vue {
       if (this.selectList.length === 0) {
         this.$message({
           message: "请选择至少一名用户",
-          type: "warning"
+          type: "warning",
         });
         return;
       }
@@ -411,13 +406,13 @@ export default class Page1 extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
+            value: "确认",
           },
           {
             type: "info",
-            value: "取消"
-          }
-        ]
+            value: "取消",
+          },
+        ],
       };
       this.changeGoldDialog = true;
     }
@@ -540,7 +535,7 @@ export default class Page1 extends Vue {
   getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000
+      pageSize: 1000,
     };
     getDeptTree(params).then((response: any) => {
       const content = this.treeData(response.data.content);
@@ -574,7 +569,7 @@ export default class Page1 extends Vue {
       response.data.forEach((item: any) => {
         this.showData.formList[0].label.push({
           value: item.id,
-          label: item.systemName
+          label: item.systemName,
         });
       });
       this.showData.formList[0].data = response.data[0].id;
@@ -587,21 +582,21 @@ export default class Page1 extends Vue {
   getSelectRoleListByUserIdAndSysId(index: any) {
     const params = {
       sysId: index,
-      userId: this.chooseTableButton.id
+      userId: this.chooseTableButton.id,
     };
     getSelectRoleListByUserIdAndSysId(params).then((response: any) => {
       const data = response.data;
       data.haveList.forEach((item: any) => {
         this.showData.formList[1].data.push({
           key: item.id,
-          label: item.roleName
+          label: item.roleName,
         });
       });
 
       data.noHaveList.forEach((item: any) => {
         this.showData.formList[1].defaultdata.push({
           key: item.id,
-          label: item.roleName
+          label: item.roleName,
         });
       });
     });

@@ -4,11 +4,7 @@
     <Button :buttonList="buttonList" @handle-button="handleButton" />
     <div class="contain">
       <div class="left">
-        <NavMenu
-          :data="navMenuData"
-          :defaultProps="navMenuProp"
-          @handle-navmenu="handleNavMenu"
-        />
+        <NavMenu :data="navMenuData" :defaultProps="navMenuProp" @handle-navmenu="handleNavMenu" />
       </div>
       <div class="right">
         <Table
@@ -51,53 +47,40 @@
             (chooseTableButton.type === 'delete') |
               (chooseTableButton.type === 'formdelete')
           "
-        >
-          是否确认删除
-        </div>
-        <Show
-          v-if="chooseTableButton.type === 'show'"
-          :formData="newFormData"
-        />
-        <System
-          :parentId="deptList.parentId"
-          v-if="chooseTableButton.type === 'system'"
-        />
+        >是否确认删除</div>
+        <Show v-if="chooseTableButton.type === 'show'" :formData="newFormData" />
+        <System :parentId="deptList.parentId" v-if="chooseTableButton.type === 'system'" />
       </div>
     </Dialog>
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
-import Search from "@/components/Search/index.vue";
-import Button from "@/components/Button/index.vue";
-import NavMenu from "@/components/NavMenu/index.vue";
-import Table from "@/components/Table/index.vue";
-import Pagination from "@/components/Pagination/index.vue";
-import Dialog from "@/components/dialog/Dialog.vue";
-import Form from "@/components/Form/index.vue";
 import Show from "./components/Show.vue";
 import System from "./components/System.vue";
+import {
+  Search,
+  Button,
+  NavMenu,
+  Table,
+  Pagination,
+  Dialog,
+  Form,
+} from "components";
 import {
   getDeptTree,
   postDeptList,
   getDeptDetail,
   postDeptUpdate,
   postDeptAdd,
-  postDeptDelete
+  postDeptDelete,
 } from "@/api/department";
 
 @Component({
   components: {
-    Search,
-    Button,
-    NavMenu,
-    Table,
-    Pagination,
-    Dialog,
-    Form,
     Show,
-    System
-  }
+    System,
+  },
 })
 export default class department extends Vue {
   // table列表
@@ -106,21 +89,21 @@ export default class department extends Vue {
     length: 1000,
     parentId: 0,
     deptName: "",
-    id: 0
+    id: 0,
   };
   fields = [
     {
       prop: "id",
-      label: "id"
+      label: "id",
     },
     {
       prop: "deptName",
-      label: "部门名称"
+      label: "部门名称",
     },
     {
       prop: "tag",
-      label: "备注"
-    }
+      label: "备注",
+    },
   ];
   tableData: any = {};
   tableButton = [
@@ -132,9 +115,9 @@ export default class department extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
-        }
-      ]
+          value: "确认",
+        },
+      ],
     },
     {
       type: "delete",
@@ -144,13 +127,13 @@ export default class department extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
+          value: "确认",
         },
         {
           type: "info",
-          value: "取消"
-        }
-      ]
+          value: "取消",
+        },
+      ],
     },
     {
       type: "show",
@@ -160,10 +143,10 @@ export default class department extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "关闭"
-        }
-      ]
-    }
+          value: "关闭",
+        },
+      ],
+    },
   ];
   selectList = [];
 
@@ -173,15 +156,15 @@ export default class department extends Vue {
       type: "Input",
       key: "deptName",
       name: "",
-      placeholder: "部门名称"
-    }
+      placeholder: "部门名称",
+    },
   ];
 
   // 部门树侧边栏
   navMenuData = [];
   navMenuProp = {
     children: "deptVOS",
-    label: "deptName"
+    label: "deptName",
   };
 
   // 弹窗
@@ -194,7 +177,7 @@ export default class department extends Vue {
         name: "部门名称",
         data: "",
         placeholder: "请输入部门名称",
-        rules: [{ required: true, message: "请输入部门名称", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入部门名称", trigger: "blur" }],
       },
       // {
       //   key: 'father',
@@ -221,7 +204,7 @@ export default class department extends Vue {
         name: "排序",
         data: "",
         placeholder: "请输入排序",
-        rules: [{ required: true, message: "请输入排序", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入排序", trigger: "blur" }],
       },
       {
         key: "tag",
@@ -229,9 +212,9 @@ export default class department extends Vue {
         name: "备注",
         data: "",
         placeholder: "请输入备注",
-        rules: [{ required: true, message: "请输入备注", trigger: "blur" }]
-      }
-    ]
+        rules: [{ required: true, message: "请输入备注", trigger: "blur" }],
+      },
+    ],
   };
   newFormData: any = {};
   changeGoldDialog = false;
@@ -240,16 +223,16 @@ export default class department extends Vue {
   buttonList = [
     {
       key: "delete",
-      name: "删除"
+      name: "删除",
     },
     {
       key: "add",
-      name: "添加"
+      name: "添加",
     },
     {
       key: "admin",
-      name: "设置部门系统管理员"
-    }
+      name: "设置部门系统管理员",
+    },
   ];
 
   mounted() {
@@ -288,7 +271,7 @@ export default class department extends Vue {
       if (this.selectList.length === 0) {
         this.$message({
           message: "请选择至少一名用户",
-          type: "warning"
+          type: "warning",
         });
         return;
       }
@@ -299,13 +282,13 @@ export default class department extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
+            value: "确认",
           },
           {
             type: "info",
-            value: "取消"
-          }
-        ]
+            value: "取消",
+          },
+        ],
       }),
         (this.changeGoldDialog = true);
     }
@@ -318,9 +301,9 @@ export default class department extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
-          }
-        ]
+            value: "确认",
+          },
+        ],
       };
       this.newFormData = JSON.parse(JSON.stringify(this.formData));
       this.changeGoldDialog = true;
@@ -333,9 +316,9 @@ export default class department extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "关闭"
-          }
-        ]
+            value: "关闭",
+          },
+        ],
       };
       this.changeGoldDialog = true;
     }
@@ -428,7 +411,7 @@ export default class department extends Vue {
   getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000
+      pageSize: 1000,
     };
     getDeptTree(params).then((response: any) => {
       const content = response.data.content;

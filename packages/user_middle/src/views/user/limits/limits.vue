@@ -45,57 +45,50 @@
             (chooseTableButton.type === 'delete') |
               (chooseTableButton.type === 'formdelete')
           "
-        >
-          是否确认删除
-        </div>
+        >是否确认删除</div>
       </div>
     </Dialog>
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
-import Search from "@/components/Search/index.vue";
-import Button from "@/components/Button/index.vue";
-import Table from "@/components/Table/index.vue";
-import Pagination from "@/components/Pagination/index.vue";
-import Dialog from "@/components/dialog/Dialog.vue";
-import Form from "@/components/Form/index.vue";
 import { getDeptTree } from "@/api/department";
+
+import { Search, Button, Table, Pagination, Dialog, Form } from "components";
+
 import {
   getPermissionList,
   getPermissionDetail,
   postPermissionAdd,
   postPermissionUpdate,
-  postPermissionDelete
+  postPermissionDelete,
 } from "@/api/limit";
 import { getSelectSysAdminListByCurrentUser } from "@/api/character";
 
-@Component({
-  components: { Search, Button, Table, Pagination, Dialog, Form }
-})
+@Component
 export default class limits extends Vue {
   // table列表
   deptList = {
     pageIndex: 1,
-    length: 1000
+    length: 1000,
   };
   fields = [
     {
       prop: "id",
-      label: "id"
+      label: "id",
     },
     {
       prop: "name",
-      label: "权限名称"
+      label: "权限名称",
     },
     {
       prop: "value",
-      label: "权限值"
+      label: "权限值",
     },
     {
       prop: "remark",
-      label: "备注"
-    }
+      label: "备注",
+    },
   ];
   tableData: any = {};
   tableButton = [
@@ -107,13 +100,13 @@ export default class limits extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
+          value: "确认",
         },
         {
           type: "info",
-          value: "取消"
-        }
-      ]
+          value: "取消",
+        },
+      ],
     },
     {
       type: "delete",
@@ -123,14 +116,14 @@ export default class limits extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
+          value: "确认",
         },
         {
           type: "info",
-          value: "取消"
-        }
-      ]
-    }
+          value: "取消",
+        },
+      ],
+    },
   ];
   selectList = [];
 
@@ -140,33 +133,33 @@ export default class limits extends Vue {
       type: "Input",
       key: "name",
       name: "",
-      placeholder: "权限名称"
+      placeholder: "权限名称",
     },
     {
       type: "Input",
       key: "value",
       name: "",
-      placeholder: "权限标识"
+      placeholder: "权限标识",
     },
     {
       key: "relSystemId",
       type: "Select",
       name: "",
       placeholder: "请选择所属系统",
-      label: []
-    }
+      label: [],
+    },
   ];
 
   // 列表按钮控制
   buttonList = [
     {
       key: "delete",
-      name: "删除"
+      name: "删除",
     },
     {
       key: "add",
-      name: "添加"
-    }
+      name: "添加",
+    },
   ];
 
   // 弹窗
@@ -178,7 +171,7 @@ export default class limits extends Vue {
         type: "Select",
         name: "所属系统",
         data: "",
-        label: []
+        label: [],
       },
       {
         key: "name",
@@ -186,7 +179,7 @@ export default class limits extends Vue {
         name: "权限名称",
         data: "",
         placeholder: "请输入权限名称",
-        rules: [{ required: true, message: "请输入权限名称", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入权限名称", trigger: "blur" }],
       },
       {
         key: "value",
@@ -194,7 +187,7 @@ export default class limits extends Vue {
         name: "权限值",
         data: "",
         placeholder: "请输入权限值",
-        rules: [{ required: true, message: "请输入权限值", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入权限值", trigger: "blur" }],
       },
       {
         key: "parentId",
@@ -205,8 +198,8 @@ export default class limits extends Vue {
         defaultExpandKeys: [0],
         defaultProps: {
           children: "deptVOS",
-          label: "deptName"
-        }
+          label: "deptName",
+        },
       },
       {
         key: "type",
@@ -216,17 +209,17 @@ export default class limits extends Vue {
         label: [
           {
             value: 0,
-            label: "目录"
+            label: "目录",
           },
           {
             value: 1,
-            label: "菜单"
+            label: "菜单",
           },
           {
             value: 2,
-            label: "按钮"
-          }
-        ]
+            label: "按钮",
+          },
+        ],
       },
       {
         key: "uri",
@@ -234,7 +227,7 @@ export default class limits extends Vue {
         name: "前端路径",
         data: "",
         placeholder: "请输入前端路径",
-        rules: [{ required: true, message: "请输入前端路径", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入前端路径", trigger: "blur" }],
       },
       {
         key: "icon",
@@ -242,7 +235,7 @@ export default class limits extends Vue {
         name: "图标",
         data: "",
         placeholder: "请输入图标",
-        rules: [{ required: true, message: "请输入图标", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入图标", trigger: "blur" }],
       },
       {
         key: "remark",
@@ -250,9 +243,9 @@ export default class limits extends Vue {
         name: "备注",
         data: "",
         placeholder: "请输入备注",
-        rules: [{ required: true, message: "请输入备注", trigger: "blur" }]
-      }
-    ]
+        rules: [{ required: true, message: "请输入备注", trigger: "blur" }],
+      },
+    ],
   };
   newFormData: any = {};
   changeGoldDialog = false;
@@ -288,7 +281,7 @@ export default class limits extends Vue {
       if (this.selectList.length === 0) {
         this.$message({
           message: "请选择至少一名用户",
-          type: "warning"
+          type: "warning",
         });
         return;
       }
@@ -299,13 +292,13 @@ export default class limits extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
+            value: "确认",
           },
           {
             type: "info",
-            value: "取消"
-          }
-        ]
+            value: "取消",
+          },
+        ],
       }),
         (this.changeGoldDialog = true);
     }
@@ -318,9 +311,9 @@ export default class limits extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
-          }
-        ]
+            value: "确认",
+          },
+        ],
       };
       this.newFormData = JSON.parse(JSON.stringify(this.formData));
       this.changeGoldDialog = true;
@@ -422,7 +415,7 @@ export default class limits extends Vue {
       response.data.forEach((item: any) => {
         this.searchList[2].label.push({
           value: item.id,
-          label: item.systemName
+          label: item.systemName,
         });
       });
       this.formData.formList[0].data = response.data[0].id;
@@ -486,7 +479,7 @@ export default class limits extends Vue {
   getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000
+      pageSize: 1000,
     };
     getDeptTree(params).then((response: any) => {
       const content = response.data.content;

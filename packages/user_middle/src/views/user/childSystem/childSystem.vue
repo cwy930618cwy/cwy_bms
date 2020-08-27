@@ -44,9 +44,7 @@
             (chooseTableButton.type === 'delete') |
               (chooseTableButton.type === 'formdelete')
           "
-        >
-          是否确认删除
-        </div>
+        >是否确认删除</div>
         <System v-if="chooseTableButton.type === 'setAdmin'" />
       </div>
     </Dialog>
@@ -54,51 +52,48 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
-import Search from "@/components/Search/index.vue";
-import Button from "@/components/Button/index.vue";
-import Table from "@/components/Table/index.vue";
-import Pagination from "@/components/Pagination/index.vue";
-import Dialog from "@/components/dialog/Dialog.vue";
-import Form from "@/components/Form/index.vue";
 import System from "./components/System.vue";
+
+import { Search, Button, Table, Pagination, Dialog, Form } from "components";
+
 import {
   getSystemList,
   getSystemDetail,
   postSystemAdd,
   postSystemUpdate,
-  postSystemDelete
+  postSystemDelete,
 } from "@/api/childSystem";
 
 @Component({
-  components: { Search, Button, Table, Pagination, Dialog, Form, System }
+  components: { System },
 })
 export default class Page1 extends Vue {
   // table列表
   deptList = {
     pageIndex: 1,
-    length: 1000
+    length: 1000,
   };
   fields = [
     {
       prop: "id",
-      label: "id"
+      label: "id",
     },
     {
       prop: "systemCode",
-      label: "系统标识"
+      label: "系统标识",
     },
     {
       prop: "systemName",
-      label: "系统名称"
+      label: "系统名称",
     },
     {
       prop: "loginCallbackUrl",
-      label: "回调地址"
+      label: "回调地址",
     },
     {
       prop: "remark",
-      label: "备注"
-    }
+      label: "备注",
+    },
   ];
   tableData: any = {};
   tableButton = [
@@ -110,13 +105,13 @@ export default class Page1 extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
+          value: "确认",
         },
         {
           type: "info",
-          value: "取消"
-        }
-      ]
+          value: "取消",
+        },
+      ],
     },
     {
       type: "delete",
@@ -126,14 +121,14 @@ export default class Page1 extends Vue {
       dialogButton: [
         {
           type: "primary",
-          value: "确认"
+          value: "确认",
         },
         {
           type: "info",
-          value: "取消"
-        }
-      ]
-    }
+          value: "取消",
+        },
+      ],
+    },
   ];
   selectList = [];
 
@@ -143,30 +138,30 @@ export default class Page1 extends Vue {
       type: "Input",
       key: "systemCode",
       name: "",
-      placeholder: "系统标识"
+      placeholder: "系统标识",
     },
     {
       type: "Input",
       key: "systemName",
       name: "",
-      placeholder: "系统名称"
-    }
+      placeholder: "系统名称",
+    },
   ];
 
   // 列表按钮控制
   buttonList = [
     {
       key: "delete",
-      name: "删除"
+      name: "删除",
     },
     {
       key: "add",
-      name: "添加"
+      name: "添加",
     },
     {
       key: "admin",
-      name: "设置管理员"
-    }
+      name: "设置管理员",
+    },
   ];
 
   // 弹窗
@@ -179,7 +174,7 @@ export default class Page1 extends Vue {
         name: "系统标识",
         data: "",
         placeholder: "请输入系统标识",
-        rules: [{ required: true, message: "请输入系统标识", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入系统标识", trigger: "blur" }],
       },
       {
         key: "systemName",
@@ -187,7 +182,7 @@ export default class Page1 extends Vue {
         name: "系统名称",
         data: "",
         placeholder: "请输入系统名称",
-        rules: [{ required: true, message: "请输入系统名称", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入系统名称", trigger: "blur" }],
       },
       {
         key: "loginCallbackUrl",
@@ -195,7 +190,7 @@ export default class Page1 extends Vue {
         name: "回调地址",
         data: "",
         placeholder: "请输入回调地址",
-        rules: [{ required: true, message: "请输入回调地址", trigger: "blur" }]
+        rules: [{ required: true, message: "请输入回调地址", trigger: "blur" }],
       },
       {
         key: "remark",
@@ -203,9 +198,9 @@ export default class Page1 extends Vue {
         name: "备注",
         data: "",
         placeholder: "请输入备注",
-        rules: [{ required: true, message: "请输入备注", trigger: "blur" }]
-      }
-    ]
+        rules: [{ required: true, message: "请输入备注", trigger: "blur" }],
+      },
+    ],
   };
   newFormData: any = {};
   changeGoldDialog = false;
@@ -240,7 +235,7 @@ export default class Page1 extends Vue {
       if (this.selectList.length === 0) {
         this.$message({
           message: "请选择至少一名用户",
-          type: "warning"
+          type: "warning",
         });
         return;
       }
@@ -251,13 +246,13 @@ export default class Page1 extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
+            value: "确认",
           },
           {
             type: "info",
-            value: "取消"
-          }
-        ]
+            value: "取消",
+          },
+        ],
       }),
         (this.changeGoldDialog = true);
     }
@@ -270,13 +265,13 @@ export default class Page1 extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
+            value: "确认",
           },
           {
             type: "info",
-            value: "取消"
-          }
-        ]
+            value: "取消",
+          },
+        ],
       };
       this.newFormData = JSON.parse(JSON.stringify(this.formData));
       this.changeGoldDialog = true;
@@ -289,13 +284,13 @@ export default class Page1 extends Vue {
         dialogButton: [
           {
             type: "primary",
-            value: "确认"
+            value: "确认",
           },
           {
             type: "info",
-            value: "取消"
-          }
-        ]
+            value: "取消",
+          },
+        ],
       };
       this.changeGoldDialog = true;
     }
