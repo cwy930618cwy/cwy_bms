@@ -1,71 +1,84 @@
 <template>
-<div class="dialog">
-  <div class="dialog__contain">
-    <div class="dialog__content"> 
-      <div class="dialog__title" v-if="title !== ''"> 
-        {{ title }}
-      </div>
-      <div class="dialog__close" @click="$emit('close')"></div>
+  <div class="dialog">
+    <div class="dialog__contain">
       <div class="dialog__content">
-        <slot/>
-      </div>
-      <div class="dialog__buttons">
-        <el-button 
-          v-for="(button, index) in buttons" 
-          :key="index" 
-          @click="$emit('button-click', index)">
-            {{button}}
-        </el-button>
+        <div class="dialog__title" v-if="title !== ''">{{ title }}</div>
+        <div class="dialog__close" @click="$emit('close')"></div>
+        <div class="dialog__content">
+          <slot />
+        </div>
+        <div class="dialog__buttons">
+          <el-button
+            size="medium"
+            v-for="(button, index) in buttons"
+            :key="index"
+            :type="button.type"
+            @click="$emit('button-click', index)"
+            >{{ button.value }}</el-button
+          >
+        </div>
       </div>
     </div>
+    <div class="dialog__hidden" @click.stop="$emit('close')"></div>
   </div>
-  <div class="dialog__hidden" @click="$emit('close')"></div>
-</div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Provide } from 'vue-property-decorator'
-
+import { Vue, Component, Prop, Provide } from "vue-property-decorator";
 
 @Component({
-  components: {  }
+  components: {}
 })
 export default class Dialog extends Vue {
-  @Prop({ default: '' }) title!: string
-  @Prop({ default: () => [] }) buttons!: string[]
-  @Provide() close () { this.$emit('close') }
-  
+  @Prop({ default: "" }) title!: string;
+  @Prop({ default: () => [] }) buttons!: string[];
+  @Prop({ default: () => [] }) width!: number;
+  @Provide() close() {
+    this.$emit("close");
+  }
 }
 </script>
 
 <style lang="scss">
-@import '@/styles/functions.scss';
-@import '@/styles/mixins.scss';
+@import "@/styles/functions.scss";
+@import "@/styles/mixins.scss";
 
-.dialog{
+.dialog {
   position: fixed;
   top: 0;
   left: 0;
   height: 100%;
   width: 100%;
   z-index: 10;
-  &__contain{
+  &__contain {
+    max-height: dim(700);
+    overflow: scroll;
     position: absolute;
+    border-radius: dim(20);
     top: 50%;
     left: 50%;
-    transform: translate(-50%,-50%);
+    transform: translate(-50%, -50%);
     text-align: center;
     background: white;
     opacity: 1;
     z-index: 12;
   }
-  &__content{
+  &__contain::-webkit-scrollbar {
+    display: none;
+  }
+  &__content {
     // width: dim(420);
+    min-width: dim(300);
+    min-height: dim(160);
+    display: flex;
+    flex-direction: column;
+    // align-items: center;
+    justify-content: center;
     position: relative;
     overflow: hidden;
     border-radius: dim(4);
     background-color: white;
-    box-shadow: dim(0) dim(2) dim(17) dim(0) rgba(0, 0, 0, 0.1);
+    padding: dim(10);
   }
   &__title {
     width: 100%;
@@ -76,7 +89,6 @@ export default class Dialog extends Vue {
     color: black;
     text-align: center;
     @include font-medium;
-    background: #F7F7FA;
   }
 
   &__close {
@@ -85,13 +97,14 @@ export default class Dialog extends Vue {
     position: absolute;
     top: dim(10);
     right: dim(12);
-    background-image: url('./cross.svg');
+    background-image: url("./cross.svg");
     background-repeat: no-repeat;
     background-position: center;
   }
 
   &__buttons {
     text-align: center;
+    padding: dim(20);
   }
 
   &__button {
@@ -102,9 +115,9 @@ export default class Dialog extends Vue {
       margin-right: dim(12);
     }
   }
-  &__hidden{
+  &__hidden {
     position: absolute;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0, 0, 0, 0.2);
     top: 0;
     left: 0;
     height: 100%;
@@ -112,9 +125,4 @@ export default class Dialog extends Vue {
     width: 100%;
   }
 }
-
-
-
-
-
 </style>

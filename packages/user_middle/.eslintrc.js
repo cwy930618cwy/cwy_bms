@@ -1,14 +1,28 @@
 module.exports = {
   root: true,
-  env: {
-    node: true
+  extends: ["plugin:vue/essential", "@vue/standard", "@vue/typescript"],
+  globals: {
+    AMap: true
   },
-  extends: ["plugin:vue/essential", "@vue/prettier", "@vue/typescript"],
-  rules: {
-    "no-console": process.env.NODE_ENV === "production" ? "error" : "off",
-    "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off"
-  },
-  parserOptions: {
-    parser: "typescript-eslint-parser"
-  }
+  overrides: [
+    {
+      files: "*.spec.ts",
+      rules: {
+        "no-unused-expressions": "off"
+      }
+    },
+    {
+      files: "*.ts",
+      rules: {
+        "no-useless-constructor": "off"
+      }
+    },
+    {
+      files: "*",
+      rules: {
+        "prefer-promise-reject-errors": "off",
+        "no-throw-literal": "off"
+      }
+    }
+  ]
 };
