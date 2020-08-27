@@ -8,5 +8,5 @@ storiesOf("Input", module).add("Input", () => ({
   },
 
   template: `
-  <Input :value="'nihao'" type="text" />`,
+  <Input type="text" />`,
 }));

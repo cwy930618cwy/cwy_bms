@@ -28,7 +28,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 @Component
-export default class AppMain extends Vue {
+export default class Search extends Vue {
   @Prop({ default: () => [] }) searchList!: string[];
 }
 </script>
