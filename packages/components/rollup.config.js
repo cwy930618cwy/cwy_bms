@@ -4,6 +4,7 @@ import scss from "rollup-plugin-scss";
 import url from "rollup-plugin-url";
 import postcssUrl from "postcss-url";
 import tsx from "./rollup-plugin-tsx";
+import commonjs from "rollup-plugin-commonjs";
 
 export default {
   input: "./src/main.js",
@@ -31,6 +32,7 @@ export default {
     "vue-touch-ripple/dist/vue-touch-ripple.css",
   ],
   plugins: [
+    commonjs(),
     url({
       emitFiles: true,
     }),

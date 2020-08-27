@@ -6,6 +6,7 @@ storiesOf("Input", module).add("Input", () => ({
   data() {
     return {};
   },
+
   template: `
   <Input :value="'nihao'" type="text" />`,
 }));

@@ -1,23 +1,26 @@
 <template>
   <div id="app" class="app">
-    <router-view/>
+    nima
+    <!-- <router-view/> -->
+    <Input :value="ppp" />
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
+import { Vue, Component } from "vue-property-decorator";
+import { Input } from "components";
 
 @Component({
-  components: { }
+  components: { Input },
 })
 export default class App extends Vue {
+  ppp = "sss";
 }
-
 </script>
 
-
 <style lang="scss">
-html, body {
+html,
+body {
   padding: 0;
   margin: 0;
   height: 100vh;
@@ -33,7 +36,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100%;
-  background: #F7F7FA;
+  background: #f7f7fa;
   overflow: scroll;
 }
 </style>
