@@ -53,9 +53,6 @@
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
 import { getDeptTree } from "@/api/department";
-
-import { Search, Button, Table, Pagination, Dialog, Form } from "components";
-
 import {
   getPermissionList,
   getPermissionDetail,
@@ -64,6 +61,8 @@ import {
   postPermissionDelete,
 } from "@/api/limit";
 import { getSelectSysAdminListByCurrentUser } from "@/api/character";
+
+import { Search, Button, Table, Pagination, Dialog, Form } from "components";
 
 @Component
 export default class limits extends Vue {
