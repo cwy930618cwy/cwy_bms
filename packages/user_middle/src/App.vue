@@ -1,8 +1,7 @@
 <template>
   <div id="app" class="app">
     nima
-    <!-- <router-view/> -->
-    <Input :value="ppp" />
+    <router-view />
   </div>
 </template>
 

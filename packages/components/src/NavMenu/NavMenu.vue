@@ -1,0 +1,22 @@
+<template>
+  <div>
+    <el-tree
+      :data="data"
+      highlight-current
+      :props="defaultProps"
+      @node-click="$emit('handle-navmenu', $event)"
+    ></el-tree>
+  </div>
+</template>
+<script lang="ts">
+import { Vue, Component, Prop } from "vue-property-decorator";
+@Component
+export default class NavMenu extends Vue {
+  @Prop({ default: () => [] }) data!: any;
+  @Prop({ default: () => [] }) defaultProps!: any;
+}
+</script>
+<style lang="scss" scoped>
+@import "../common/functions.scss";
+@import "../common/mixins.scss";
+</style>
