@@ -14,8 +14,7 @@ import store from "./store";
 import router from "./router";
 
 import "./icons"; // icon
-import "./permission"; // permission control
-import "./utils/error-log"; // error log
+import "./permission.ts"; // permission control
 
 /**
  * If you don't want to use mock-server

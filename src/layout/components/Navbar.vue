@@ -1,36 +1,37 @@
 <template>
   <div class="navbar">
-    <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
+    <hamburger
+      id="hamburger-container"
+      :is-active="sidebar.opened"
+      class="hamburger-container"
+      @toggleClick="toggleSideBar"
+    />
 
     <breadcrumb id="breadcrumb-container" class="breadcrumb-container" />
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex'
-import Breadcrumb from '@/components/Breadcrumb'
-import Hamburger from '@/components/Hamburger'
+<script lang="ts">
+import { mapGetters } from "vuex";
+import Breadcrumb from "@/components/Breadcrumb/index.vue";
+import Hamburger from "@/components/Hamburger/index.vue";
 
-export default {
-  components: {
-    Breadcrumb,
-    Hamburger
-  },
-  computed: {
-    ...mapGetters([
-      'sidebar',
-      'avatar',
-      'device'
-    ])
-  },
-  methods: {
-    toggleSideBar() {
-      this.$store.dispatch('app/toggleSideBar')
-    },
-    async logout() {
-      await this.$store.dispatch('user/logout')
-      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
-    }
+import { Vue, Component } from "vue-property-decorator";
+
+@Component({
+  components: { Breadcrumb, Hamburger }
+})
+export default class Navbar extends Vue {
+  get sidebar() {
+    return this.$store.state.app.sidebar;
+  }
+
+  toggleSideBar() {
+    this.$store.dispatch("app/toggleSideBar");
+  }
+  async logout() {
+    await this.$store.dispatch("user/logout");
+    this.$router.push(`/login?redirect=${this.$route.fullPath}`);
   }
 }
 </script>
@@ -41,18 +42,18 @@ export default {
   overflow: hidden;
   position: relative;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
 
   .hamburger-container {
     line-height: 46px;
     height: 100%;
     float: left;
     cursor: pointer;
-    transition: background .3s;
-    -webkit-tap-highlight-color:transparent;
+    transition: background 0.3s;
+    -webkit-tap-highlight-color: transparent;
 
     &:hover {
-      background: rgba(0, 0, 0, .025)
+      background: rgba(0, 0, 0, 0.025);
     }
   }
 
@@ -84,10 +85,10 @@ export default {
 
       &.hover-effect {
         cursor: pointer;
-        transition: background .3s;
+        transition: background 0.3s;
 
         &:hover {
-          background: rgba(0, 0, 0, .025)
+          background: rgba(0, 0, 0, 0.025);
         }
       }
     }

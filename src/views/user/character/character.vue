@@ -1,63 +1,175 @@
 <template>
-  <div class="page1">
-    <Search :searchList="searchList" @handle-search="handleSearch" />
-    <Button :buttonList="buttonList" @handle-button="handleButton" />
-    <div class="contain">
-      <div class="right">
-        <Table
-          :fields="fields"
-          :tableData="tableData.content"
-          :tableButton="tableButton"
-          @handle-selection-change="handleSelectionChange"
-          @handle-table-button="handleTableButton"
-        />
-      </div>
+  <div class="content">
+    <div class="components_search">
+      <el-input
+        placeholder="id"
+        v-model="characterList.id"
+        clearable
+      ></el-input>
+      <el-input
+        placeholder="角色名称"
+        v-model="characterList.roleName"
+        clearable
+      ></el-input>
+      <el-select
+        v-model="characterList.relSystemId"
+        placeholder="请选择所属系统"
+      >
+        <el-option
+          v-for="(item, index) in systemList"
+          :key="index"
+          :label="item.label"
+          :value="item.value"
+        ></el-option>
+      </el-select>
+      <el-button @click="handleSearch">搜索</el-button>
     </div>
-    <div class="footer">
-      <pagination
-        :total="tableData.totalPages ? tableData.totalPages : 0"
-        @pagination="currentChange"
-      />
+    <div class="components_handleList">
+      <el-button type="primary" @click="addCharacter">添加</el-button>
+      <el-button type="danger" @click="deleteCharacter()">删除</el-button>
     </div>
 
-    <Dialog
-      :width="chooseTableButton.width"
-      v-if="changeGoldDialog"
-      :buttons="chooseTableButton.dialogButton"
-      class="company-content__dialog"
-      :title="chooseTableButton.title"
-      @close="close"
-      @button-click="handleDialogButton"
+    <el-table
+      :data="tableData.content"
+      tooltip-effect="dark"
+      style="width: 100%"
+      row-key="id"
+      :header-cell-style="{ background: '#eef1f6', color: '#606266' }"
+      @selection-change="handleSelectionChange"
     >
-      <div class="company-content__dialog__center">
-        <Form
-          ref="formRefs"
-          v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'"
-          :formData="newFormData"
-          @handle-validate="handleValidate"
-        />
-        <div
-          v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'"
-        >是否确认删除</div>
-        <Form
-          ref="showRefs"
-          v-if="chooseTableButton.type === 'allocation'"
-          :formData="showData"
-          @getCheckedKeys="handleCheckedKeys"
-        />
+      <el-table-column align="center" type="selection"></el-table-column>
+      <el-table-column prop="id" align="center" label="ID"></el-table-column>
+      <el-table-column prop="characterCode" align="center" label="角色标识">
+      </el-table-column>
+      <el-table-column
+        prop="roleName"
+        align="center"
+        label="角色名称"
+      ></el-table-column>
+      <el-table-column
+        prop="loginCallbackUrl"
+        align="center"
+        label="回调地址"
+      ></el-table-column>
+      <el-table-column
+        prop="remark"
+        align="center"
+        label="备注"
+      ></el-table-column>
+      <el-table-column fixed="right" align="center" label="操作">
+        <template slot-scope="scope">
+          <el-button
+            type="primary"
+            size="mini"
+            @click="getSelectPermissionByRoleId(scope.row.id)"
+            >分配权限</el-button
+          >
+          <el-button
+            type="primary"
+            size="mini"
+            @click="getRoleDetail(scope.row.id)"
+            >编辑</el-button
+          >
+          <el-button
+            type="danger"
+            size="mini"
+            @click="deleteCharacter(scope.row.id)"
+            >删除</el-button
+          >
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <div class="pagination-container">
+      <el-pagination
+        background
+        @current-change="currentChange"
+        :page-sizes="[10, 20, 30, 50]"
+        layout="sizes, prev, pager, next, jumper"
+        :total="tableData.total"
+      ></el-pagination>
+    </div>
+
+    <el-dialog
+      :title="characterFormName"
+      center
+      :visible.sync="showCharacterDialog"
+      @close="closeCharacterForm"
+      width="30%"
+    >
+      <div class="tableList">
+        <el-form
+          ref="addForm"
+          :model="characterFormList"
+          :rules="rules"
+          label-width="80px"
+        >
+          <el-form-item label="所属系统" prop="relSystemId">
+            <el-select
+              v-model="characterFormList.relSystemId"
+              placeholder="请输入所属系统"
+            >
+              <el-option
+                v-for="(item, index) in systemList"
+                :key="index"
+                :label="item.label"
+                :value="item.value"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="角色名称" prop="roleName">
+            <el-input
+              placeholder="请输入角色名称"
+              v-model="characterFormList.roleName"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="备注" prop="remark">
+            <el-input
+              placeholder="请输入备注"
+              v-model="characterFormList.remark"
+            ></el-input>
+          </el-form-item>
+        </el-form>
       </div>
-    </Dialog>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="closeCharacterForm">取 消</el-button>
+        <el-button type="primary" @click="validCharacter">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      title="授权角色"
+      center
+      :visible.sync="showLimitDialog"
+      width="40%"
+    >
+      <div class="tableList">
+        <el-form ref="limitForm" :model="limitFormList" label-width="100px">
+          <el-form-item label="可分配权限" prop="data">
+            <el-tree
+              ref="treeRef"
+              node-key="id"
+              :show-checkbox="true"
+              :data="limitFormList.data"
+              :props="limitFormList.defaultProps"
+              highlight-current
+              default-expand-all
+            ></el-tree>
+          </el-form-item>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="showCharacterDialog = false">取 消</el-button>
+        <el-button type="primary" @click="getAddUcRolePermissionRelation"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch } from 'vue-property-decorator'
-import Search from '@/views/user/components/Search/index.vue'
-import Button from '@/views/user/components/Button/index.vue'
-import Table from '@/views/user/components/Table/index.vue'
-import Pagination from '@/components/Pagination/index.vue'
-import Dialog from '@/views/user/components/dialog/Dialog.vue'
-import Form from '@/views/user/components/Form/index.vue'
-import { getDeptTree } from '@/api/department'
+import { Vue, Component, Watch } from "vue-property-decorator";
+import { getDeptTree } from "@/api/department";
 import {
   getRoleList,
   getRoleDetail,
@@ -66,434 +178,360 @@ import {
   postRoleDelete,
   getSelectPermissionByRoleId,
   getAddUcRolePermissionRelation,
-  getSelectSysAdminListByCurrentUser,
-} from '@/api/character'
+  getSelectSysAdminListByCurrentUser
+} from "@/api/character";
 
-@Component({
-  components: { Search, Button, Table, Pagination, Dialog, Form },
-})
-export default class Page1 extends Vue {
+import { getPermissionDetail } from "@/api/limit";
+
+@Component
+export default class character extends Vue {
+  // 搜索
+  systemList: any = [];
   // table列表
-  deptList = {
+  characterList: any = {
     pageIndex: 1,
     length: 1000,
-  }
-  fields = [
-    {
-      prop: 'id',
-      label: 'id',
-    },
-    {
-      prop: 'roleName',
-      label: '角色名称',
-    },
-    {
-      prop: 'relSystemId',
-      label: '所属系统',
-    },
-    {
-      prop: 'remark',
-      label: '备注',
-    },
-  ]
-  tableData: any = {}
-  tableButton = [
-    {
-      type: 'allocation',
-      name: '分配权限',
-      title: '分配权限',
-      buttonType: 'primary',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-      ],
-    },
-    {
-      type: 'edit',
-      name: '编辑',
-      title: '编辑角色',
-      buttonType: 'primary',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-        {
-          type: 'info',
-          value: '取消',
-        },
-      ],
-    },
-    {
-      type: 'delete',
-      name: '删除',
-      title: '确认删除',
-      buttonType: 'danger',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-        {
-          type: 'info',
-          value: '取消',
-        },
-      ],
-    },
-  ]
-  selectList = []
+    roleName: "",
+    relCharacterId: null,
+    id: null
+  };
 
-  // 搜索框
-  searchList: any = [
-    {
-      type: 'Input',
-      key: 'roleName',
-      name: '',
-      placeholder: '角色名称',
-    },
-    {
-      key: 'relSystemId',
-      type: 'Select',
-      name: '',
-      placeholder: '请选择所属系统',
-      label: [],
-    },
-  ]
+  tableData: any = {};
 
-  // 列表按钮控制
-  buttonList = [
-    {
-      key: 'delete',
-      name: '删除',
-    },
-    {
-      key: 'add',
-      name: '添加',
-    },
-  ]
+  selectList = [];
+  characterFormName = "添加子角色";
 
-  // 弹窗
-  chooseTableButton: any = {}
-  formData: any = {
-    formList: [
-      {
-        key: 'relSystemId',
-        type: 'Select',
-        name: '所属系统',
-        data: '',
-        label: [],
-      },
-      {
-        key: 'roleName',
-        type: 'Input',
-        name: '角色名称',
-        data: '',
-        placeholder: '请输入角色名称',
-        rules: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
-      },
-      {
-        key: 'remark',
-        type: 'Textarea',
-        name: '备注',
-        data: '',
-        placeholder: '请输入备注',
-        rules: [{ required: true, message: '请输入备注', trigger: 'blur' }],
-      },
+  // form列表
+  characterFormList: any = {
+    id: -1,
+    roleName: "",
+    relSystemId: null,
+    remark: ""
+  };
+  rules = {
+    roleName: [{ required: true, message: "请输入角色名称", trigger: "blur" }],
+    relSystemId: [
+      { required: true, message: "请输入所属系统", trigger: "blur" }
     ],
-  }
-  showData: any = {
-    formList: [
-      {
-        key: 'fatherName',
-        type: 'tree',
-        showCheckBox: true,
-        name: '分配权限',
-        data: [],
-        defaultExpandKeys: [0],
-        defaultProps: {
-          children: 'children',
-          label: 'name',
-        },
-      },
-    ],
-  }
-  newFormData: any = {}
-  changeGoldDialog = false
+    remark: [{ required: true, message: "请输入备注", trigger: "blur" }]
+  };
+  defaultForm: any = {};
+
+  limitFormList: any = {
+    id: null,
+    data: [1],
+    defaultProps: {
+      children: "deptVOS",
+      label: "deptName"
+    }
+  };
+
+  // 弹窗显示
+  showCharacterDialog = false;
+  showDeleteDialog = false;
+  showLimitDialog = false;
 
   mounted() {
-    this.getSelectSysAdminListByCurrentUser()
+    this.getDeptTree();
+    this.getSelectSysAdminListByCurrentUser();
+    this.defaultForm = JSON.parse(JSON.stringify(this.characterFormList));
+  }
+
+  // 搜索框
+  handleSearch() {
+    this.getRoleList();
+  }
+
+  // 添加按钮点击显示弹窗
+  addCharacter() {
+    this.characterFormName = "添加子角色";
+    this.showCharacterDialog = !this.showCharacterDialog;
+  }
+
+  // 删除按钮点击显示弹窗
+  deleteCharacter(arrId?: string[]) {
+    let id: any[] = [];
+    if (arrId) {
+      id = [arrId];
+    } else {
+      if (this.selectList.length === 0) {
+        this.$message({
+          message: "请选择至少一名用户",
+          type: "warning"
+        });
+        return;
+      }
+      this.selectList.forEach((item: any) => {
+        id.push(item.id);
+      });
+    }
+    this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning"
+    })
+      .then(() => {
+        this.postRoleDelete(id);
+        this.$message({
+          type: "success",
+          message: "删除成功!"
+        });
+      })
+      .catch(() => {
+        this.$message({
+          type: "info",
+          message: "已取消删除"
+        });
+      });
   }
 
   // 分页选择当前页
-  handleSelectionChange(val: any) {
-    this.selectList = val
-  }
-
-  // 搜索框
-  handleSearch(data: any) {
-    data.forEach((item: any) => {
-      ;(this.deptList as any)[item.key] = item.name
-    })
-    this.getRoleList()
+  handleSelectionChange(val: []) {
+    this.selectList = val;
   }
 
   // 分页选择
-  currentChange(index: any) {
-    this.deptList.pageIndex = index.page
-    this.deptList.length = index.limit
-    this.getRoleList()
+  currentChange(index: number) {
+    this.characterList.pageIndex = index;
+    this.getRoleList();
   }
 
-  // 总体按钮点击弹窗
-  handleButton(type: any) {
-    if (type === 'delete') {
-      if (this.selectList.length === 0) {
-        this.$message({
-          message: '请选择至少一名用户',
-          type: 'warning',
-        })
-        return
+  // 添加/编辑按钮 关闭弹窗
+  closeCharacterForm() {
+    this.characterFormList = JSON.parse(JSON.stringify(this.defaultForm));
+    this.showCharacterDialog = false;
+  }
+
+  // 添加/编辑角色验证
+  validCharacter() {
+    (this.$refs.addForm as any).validate((valid: any) => {
+      if (valid) {
+        if (this.characterFormList.id !== 0) {
+          this.postRoleUpdate();
+        } else {
+          this.postRoleAdd();
+        }
+      } else {
+        return false;
       }
-      ;(this.chooseTableButton = {
-        type: 'formdelete',
-        name: '删除',
-        title: '确认删除',
-        dialogButton: [
-          {
-            type: 'primary',
-            value: '确认',
-          },
-          {
-            type: 'info',
-            value: '取消',
-          },
-        ],
-      }),
-        (this.changeGoldDialog = true)
-    }
-    // 添加
-    if (type === 'add') {
-      this.chooseTableButton = {
-        type: 'add',
-        name: '添加',
-        title: '添加部门',
-        dialogButton: [
-          {
-            type: 'primary',
-            value: '确认',
-          },
-        ],
-      }
-      this.newFormData = JSON.parse(JSON.stringify(this.formData))
-      this.changeGoldDialog = true
-    }
-  }
-
-  // table点击弹窗
-  handleTableButton(val: any, item: any) {
-    item.id = val.id
-    this.chooseTableButton = item
-
-    if (item.type === 'allocation') {
-      this.getSelectPermissionByRoleId(val.id)
-    } else if (item.type === 'edit') {
-      this.getRoleDetail(val.id)
-    } else {
-      this.changeGoldDialog = true
-    }
-  }
-
-  // 弹窗按钮点击
-  handleDialogButton(index: any) {
-    const type = this.chooseTableButton.type
-    switch (type) {
-      case 'allocation':
-        this.handleAllocation()
-        break
-      case 'edit':
-        ;(this.$refs.formRefs as any).submitForm()
-        break
-      case 'delete':
-        this.handleDelete(index)
-        break
-      case 'formdelete':
-        this.handleFormdelete(index)
-        break
-      case 'add':
-        ;(this.$refs.formRefs as any).submitForm()
-        break
-      default:
-        this.changeGoldDialog = false
-    }
-  }
-
-  // 总体删除按钮
-  handleFormdelete(index: any) {
-    if (index === 0) {
-      let idArr: any = []
-      this.selectList.forEach((item: any) => {
-        idArr.push(item.id)
-      })
-      this.postRoleDelete(idArr)
-    }
-  }
-
-  // 编辑/添加提交操作
-  handleValidate(arrId?: any) {
-    let submitData: any = {}
-    this.updateData.formList.forEach((item: any) => {
-      submitData[item.key] = item.data
-    })
-    if (this.chooseTableButton.id) {
-      submitData.id = this.chooseTableButton.id
-      this.postRoleUpdate(submitData)
-    } else {
-      this.postRoleAdd(submitData)
-    }
-  }
-
-  // 分配权限
-  handleAllocation() {
-    ;(this.$refs.showRefs as any).getCheckedKeys()
-  }
-
-  // table删除单个角色
-  handleDelete(index: any) {
-    if (index === 0) {
-      this.postRoleDelete()
-    } else {
-      this.changeGoldDialog = false
-    }
-  }
-
-  // 树组件回调
-  handleCheckedKeys(treeData: any) {
-    this.getAddUcRolePermissionRelation(treeData)
-  }
-
-  close() {
-    this.changeGoldDialog = false
-  }
-
-  // 监听form值变化
-  updateData: any = {}
-  @Watch('newFormData', { immediate: true, deep: true })
-  onChangeFormData(newVal: string[], oldVal: string) {
-    this.updateData = newVal
-  }
-
-  updateShowData: any = {}
-  @Watch('showData', { immediate: true, deep: true })
-  onChangeFormShowData(newVal: string[], oldVal: string) {
-    this.updateShowData = newVal
+    });
   }
 
   // 接口调取
   // 获取角色列表
   getSelectSysAdminListByCurrentUser() {
     getSelectSysAdminListByCurrentUser().then((response: any) => {
-      this.searchList[1].name = response.data[0].id
       response.data.forEach((item: any) => {
-        this.searchList[1].label.push({
+        this.systemList.push({
           value: item.id,
-          label: item.systemName,
-        })
-      })
-      this.formData.formList[0].data = response.data[0].id
-      this.formData.formList[0].label = this.searchList[1].label
-    })
+          label: item.systemName
+        });
+      });
+    });
   }
   // 分页查询角色
   getRoleList() {
-    getRoleList(this.deptList).then((response: any) => {
-      this.tableData = response.data
-    })
+    const params = JSON.parse(JSON.stringify(this.characterList));
+    params.id = Number(params.id);
+    getRoleList(params).then((response: any) => {
+      this.tableData = response.data;
+    });
   }
 
   // 授权角色
-  getSelectPermissionByRoleId(data: any) {
-    getSelectPermissionByRoleId({ id: data }).then((response: any) => {
-      this.showData.formList[0].data = response.data.permissionTree
-      const defaultExpandKeys = response.data.haveIdList
-      this.changeGoldDialog = true
-      if (!!response.data.haveIdList) {
-        this.$nextTick(() => {
-          ;(this.$refs.showRefs as any).setCheckedKeys(defaultExpandKeys)
-        })
-      }
-    })
+  getSelectPermissionByRoleId(id: number) {
+    // getSelectPermissionByRoleId({ id: data }).then((response: any) => {
+    //   this.limitFormList.data = response.data.permissionTree;
+    //   const defaultExpandKeys = response.data.haveIdList;
+    //   this.showLimitDialog = true;
+    //   if (!!response.data.haveIdList) {
+    //     this.$nextTick(() => {
+    //       (this.$refs.limitRefs as any).setCheckedKeys(defaultExpandKeys);
+    //     });
+    //   }
+    // });
+
+    this.limitFormList.id = id;
+    getPermissionDetail({ id: id }).then((response: any) => {
+      this.showLimitDialog = true;
+      this.limitFormList.choose = [2, 3];
+      this.$nextTick(() => {
+        console.log(this.$refs.treeRef);
+        (this.$refs.treeRef as any).setCheckedKeys([2, 3]);
+      });
+    });
   }
 
   // 给角色授权权限
-  getAddUcRolePermissionRelation(data: any) {
+  getAddUcRolePermissionRelation() {
+    const treeKeys = (this.$refs.treeRef as any).getCheckedKeys();
     const params = {
-      permissionIdList: data,
-      roleId: this.chooseTableButton.id,
-    }
+      permissionIdList: treeKeys,
+      roleId: this.limitFormList.id
+    };
     getAddUcRolePermissionRelation(params).then((response: any) => {
-      this.changeGoldDialog = false
-    })
+      this.showLimitDialog = false;
+    });
   }
 
   // 编辑按钮 回显
-  getRoleDetail(data: any) {
-    getRoleDetail({ id: data }).then((response: any) => {
-      this.newFormData = JSON.parse(JSON.stringify(this.formData))
-      this.newFormData.formList.forEach((element: any) => {
-        element.data = response.data[element.key]
-      })
-      this.changeGoldDialog = true
-    })
+  getRoleDetail(id: number) {
+    this.characterFormList.id = id;
+    getRoleDetail({ id: id }).then((response: any) => {
+      Object.keys(this.characterFormList).forEach(key => {
+        this.characterFormList[key] = response.data[key];
+      });
+      this.characterFormName = "编辑子角色";
+      this.showCharacterDialog = true;
+    });
   }
 
   // 添加角色提交
-  postRoleAdd(data: any) {
-    postRoleAdd(data).then((response: any) => {
-      this.getRoleList()
-      this.changeGoldDialog = false
-    })
+  postRoleAdd() {
+    postRoleAdd(this.characterFormList).then((response: any) => {
+      this.getRoleList();
+      this.closeCharacterForm();
+    });
   }
 
   // 编辑提交
-  postRoleUpdate(data: any) {
-    postRoleUpdate(data).then((response: any) => {
-      this.getRoleList()
-      this.changeGoldDialog = false
-    })
+  postRoleUpdate() {
+    postRoleUpdate(this.characterFormList).then((response: any) => {
+      this.getRoleList();
+      this.closeCharacterForm();
+    });
   }
 
   // 删除列表
-  postRoleDelete(arrId?: any) {
-    const id = arrId ? arrId : [this.chooseTableButton.id]
+  postRoleDelete(arrId: string[]) {
+    const id = arrId ? arrId : this.selectList;
     postRoleDelete(id).then((response: any) => {
-      this.getRoleList()
-      this.changeGoldDialog = false
-    })
+      this.$message({
+        type: "success",
+        message: "删除成功!"
+      });
+      this.getRoleList();
+    });
+  }
+
+  // 分页查询部门树
+  getDeptTree() {
+    const params = {
+      pageNum: 1,
+      pageSize: 1000
+    };
+    getDeptTree(params).then((response: any) => {
+      const content = this.treeData(response.data.content);
+      this.limitFormList.data = content;
+    });
+  }
+
+  treeData(data: any) {
+    data.forEach((element: any) => {
+      if (element.deptVOS.length === 0) {
+        element.deptVOS = undefined;
+      } else {
+        this.treeData(element.deptVOS);
+      }
+    });
+    return data;
   }
 }
 </script>
 <style lang="scss" scoped>
-@import '@/styles/functions.scss';
-@import '@/styles/mixins.scss';
+@import "@/styles/functions.scss";
+@import "@/styles/mixins.scss";
 
-.page1 {
+.content {
   background: white;
   padding: dim(30) dim(20);
   position: relative;
+  margin: dim(20);
   .contain {
     width: 100%;
     display: flex;
     margin-bottom: dim(40);
     .left {
-      width: dim(160);
+      width: dim(200);
       border: dim(1) solid #eee;
     }
     .right {
       padding: 0 dim(20);
       flex: 1;
       height: 100%;
+    }
+  }
+}
+.company-content__dialog__center {
+  height: 100%;
+  width: 100%;
+}
+
+.components_search {
+  display: flex;
+  margin-bottom: dim(10);
+  .el-input {
+    width: dim(140);
+    margin-right: dim(10);
+    display: flex;
+    align-items: center;
+    ::v-deep .el-input__inner {
+      height: dim(30) !important;
+    }
+    ::v-deep .el-input__suffix {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .el-select {
+    margin-right: dim(10);
+    ::v-deep .el-input__inner {
+      height: dim(30) !important;
+    }
+    ::v-deep .el-input__suffix {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .el-button {
+    height: 30px;
+    line-height: 30px;
+    padding: 0 30px;
+  }
+}
+
+.components_handleList {
+  display: flex;
+  height: dim(36);
+  margin-bottom: dim(20);
+}
+
+.pagination-container {
+  background: #fff;
+  padding: 32px 16px;
+}
+.pagination-container.hidden {
+  display: none;
+}
+
+.company-content__dialog__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: dim(30) 0;
+}
+.company-content__dialog__input {
+  width: dim(300);
+  height: dim(40);
+  padding: 0 dim(14);
+}
+.table {
+  &__image {
+    height: 100px;
+    width: 100px;
+    img {
+      height: 100%;
+      width: 100%;
     }
   }
 }

@@ -1,67 +1,236 @@
 <template>
-  <div class="page1">
-    <Search :searchList="searchList" @handle-search="handleSearch" />
-    <Button :buttonList="buttonList" @handle-button="handleButton" />
-    <div class="contain">
-      <div class="left">
-        <NavMenu :data="navMenuData" :defaultProps="navMenuProp" @handle-navmenu="handleNavMenu" />
-      </div>
-      <div class="right">
-        <Table
-          :fields="fields"
-          :tableData="tableData.content"
-          :tableButton="tableButton"
-          @handle-selection-change="handleSelectionChange"
-          @handle-table-button="handleTableButton"
-        />
-      </div>
+  <div class="user">
+    <div class="components_search">
+      <!-- <el-input placeholder="id" v-model="userList.id" clearable></el-input> -->
+      <el-input
+        placeholder="用户名"
+        v-model="userList.username"
+        clearable
+      ></el-input>
+      <el-input
+        placeholder="手机"
+        v-model="userList.phone"
+        clearable
+      ></el-input>
+      <el-button @click="handleSearch">搜索</el-button>
     </div>
-    <div class="footer">
-      <pagination
-        :total="tableData.totalPages ? tableData.totalPages : 0"
-        @pagination="currentChange"
-      />
+    <div class="components_handleList">
+      <el-button type="primary" @click="addUser">添加</el-button>
+      <el-button type="danger" @click="deleteUser()">删除</el-button>
+      <el-button type="primary" @click="resetPassword">重置密码</el-button>
     </div>
 
-    <Dialog
-      :width="chooseTableButton.width"
-      v-if="changeGoldDialog"
-      :buttons="chooseTableButton.dialogButton"
-      class="company-content__dialog"
-      :title="chooseTableButton.title"
-      @close="close"
-      @button-click="handleDialogButton"
-    >
-      <div class="company-content__dialog__center">
-        <Form
-          ref="formRefs"
-          v-if="chooseTableButton.type === 'edit' | chooseTableButton.type === 'add'"
-          :formData="newFormData"
-          @handle-validate="handleValidate"
-        />
-        <div
-          v-if="chooseTableButton.type === 'delete' | chooseTableButton.type === 'formdelete'"
-        >是否确认删除</div>
-        <div v-if="chooseTableButton.type === 'password'">新手机号为后6位</div>
-        <Form
-          v-if="chooseTableButton.type === 'accredit'"
-          @handle-select="getSelectRoleListByUserIdAndSysId"
-          :formData="showData"
-        />
+    <div class="contain">
+      <div class="left">
+        <el-tree
+          :data="navMenuData"
+          highlight-current
+          :props="navMenuProp"
+          @node-click="handleNavMenu"
+        ></el-tree>
       </div>
-    </Dialog>
+      <div class="right">
+        <el-table
+          :data="tableData.content"
+          tooltip-effect="dark"
+          style="width: 100%"
+          row-key="id"
+          :header-cell-style="{ background: '#eef1f6', color: '#606266' }"
+          @selection-change="handleSelectionChange"
+        >
+          >
+          <el-table-column align="center" type="selection"></el-table-column>
+          <el-table-column
+            prop="id"
+            align="center"
+            label="ID"
+          ></el-table-column>
+          <el-table-column
+            prop="username"
+            align="center"
+            label="用户名"
+          ></el-table-column>
+          <el-table-column
+            prop="nickname"
+            align="center"
+            label="昵称"
+          ></el-table-column>
+          <el-table-column
+            prop="phone"
+            align="center"
+            label="手机"
+          ></el-table-column>
+          <el-table-column
+            prop="email"
+            align="center"
+            label="邮箱"
+          ></el-table-column>
+          <el-table-column
+            prop="gender"
+            align="center"
+            label="性别"
+          ></el-table-column>
+          <el-table-column fixed="right" align="center" label="操作">
+            <template slot-scope="scope">
+              <el-button
+                type="primary"
+                size="mini"
+                @click="handleUser(scope.row.id)"
+                >授权角色</el-button
+              >
+              <el-button
+                type="primary"
+                size="mini"
+                @click="getUserDetail(scope.row.id)"
+                >编辑</el-button
+              >
+              <el-button
+                type="danger"
+                size="mini"
+                @click="deleteUser(scope.row.id)"
+                >删除</el-button
+              >
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <div class="pagination-container">
+      <el-pagination
+        background
+        @current-change="currentChange"
+        :page-sizes="[10, 20, 30, 50]"
+        layout="sizes, prev, pager, next, jumper"
+        :total="tableData.total"
+      ></el-pagination>
+    </div>
+
+    <el-dialog
+      :title="userFormName"
+      center
+      :visible.sync="editUserDialog"
+      @close="closeUserForm"
+      width="30%"
+    >
+      <div class="tableList">
+        <el-form
+          ref="userForm"
+          :model="userFormList"
+          :rules="rules"
+          label-width="80px"
+        >
+          <el-form-item label="用户名" prop="username">
+            <el-input
+              placeholder="请输入用户名"
+              v-model="userFormList.username"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input
+              placeholder="请输入密码"
+              v-model="userFormList.password"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="昵称" prop="nickname">
+            <el-input
+              placeholder="请输入昵称"
+              v-model="userFormList.nickname"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="手机" prop="phone">
+            <el-input
+              placeholder="请输入手机"
+              v-model="userFormList.phone"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input
+              placeholder="请输入邮箱"
+              v-model="userFormList.email"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="性别" prop="gender">
+            <el-radio-group v-model="userFormList.gender">
+              <el-radio
+                :label="item.label"
+                v-for="(item, index) in genderRadio"
+                :key="index"
+                >{{ item.name }}</el-radio
+              >
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="城市" prop="city">
+            <el-input
+              placeholder="请输入城市"
+              v-model="userFormList.city"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="职业" prop="job">
+            <el-input
+              placeholder="请输入职业"
+              v-model="userFormList.job"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="个性签名" prop="personalizedSignature">
+            <el-input
+              placeholder="请输入个性签名"
+              v-model="userFormList.personalizedSignature"
+            ></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="closeUserForm">取 消</el-button>
+        <el-button type="primary" @click="validUser">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      title=""
+      center
+      :visible.sync="showUserDialog"
+      @close="closeShowForm"
+      width="60%"
+    >
+      <div class="tableList">
+        <el-form
+          ref="userForm"
+          :model="showFormList"
+          :rules="rules"
+          label-width="80px"
+        >
+          <el-form-item label="系统" prop="system">
+            <el-select
+              v-model="showFormList.system"
+              @change="getSelectRoleListByUserIdAndSysId"
+              placeholder="所属系统"
+            >
+              <el-option
+                v-for="(item, index) in systemList"
+                :key="index"
+                :label="item.label"
+                :value="item.value"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="授权角色" prop="roles">
+            <el-transfer
+              v-model="transferList.data"
+              :data="transferList.defaultdata"
+            ></el-transfer>
+          </el-form-item>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="postUserRoles">确认</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch } from 'vue-property-decorator'
-import Search from '@/views/user/components/Search/index.vue'
-import Button from '@/views/user/components/Button/index.vue'
-import NavMenu from '@/views/user/components/NavMenu/index.vue'
-import Table from '@/views/user/components/Table/index.vue'
-import Pagination from '@/components/Pagination/index.vue'
-import Dialog from '@/views/user/components/dialog/Dialog.vue'
-import Form from '@/views/user/components/Form/index.vue'
-import { getDeptTree, postUserList } from '@/api/department'
+import { Vue, Component, Watch } from "vue-property-decorator";
+import { getDeptTree, postUserList } from "@/api/department";
 import {
   getUserDetail,
   postResetPassword,
@@ -70,608 +239,447 @@ import {
   deleteUserBatch,
   postUserRoles,
   getSelectRoleListByUserIdAndSysId,
-  getSelectDeptSysAdminListByCurrentUser,
-} from '@/api/childUser'
-
+  getSelectDeptSysAdminListByCurrentUser
+} from "@/api/childUser";
 @Component({
-  components: { Search, Button, NavMenu, Table, Pagination, Dialog, Form },
+  components: {}
 })
-export default class Page1 extends Vue {
+export default class user extends Vue {
+  // 用户树侧边栏
+  navMenuData = [];
+  navMenuProp = {
+    children: "deptVOS",
+    label: "deptName"
+  };
   // table列表
-  deptList = {
+  userList: any = {
     pageIndex: 1,
     length: 1000,
-    deptId: 0,
-  }
-  fields = [
-    {
-      prop: 'id',
-      label: 'id',
-    },
-    {
-      prop: 'username',
-      label: '用户名',
-    },
-    {
-      prop: 'nickname',
-      label: '昵称',
-    },
-    {
-      prop: 'phone',
-      label: '手机',
-    },
-    {
-      prop: 'email',
-      label: '邮箱',
-    },
-    {
-      prop: 'gender',
-      label: '性别',
-    },
-  ]
-  tableData: any = {}
-  tableButton = [
-    {
-      type: 'accredit',
-      name: '授权角色',
-      title: '授权角色',
-      buttonType: 'info',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-      ],
-    },
-    {
-      type: 'edit',
-      name: '编辑',
-      title: '编辑部门',
-      buttonType: 'primary',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-        {
-          type: 'info',
-          value: '取消',
-        },
-      ],
-    },
-    {
-      type: 'delete',
-      name: '删除',
-      title: '确认删除',
-      buttonType: 'danger',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-        {
-          type: 'info',
-          value: '取消',
-        },
-      ],
-    },
-  ]
-  selectList = []
+    deptId: null
+  };
 
-  // 搜索框
-  searchList = [
-    {
-      type: 'Input',
-      key: 'username',
-      name: '',
-      placeholder: '用户名',
-    },
-    {
-      type: 'Input',
-      key: 'phone',
-      name: '',
-      placeholder: '手机',
-    },
-  ]
+  tableData: any = {};
 
-  // 列表按钮控制
-  buttonList = [
-    {
-      key: 'delete',
-      name: '删除',
-    },
-    {
-      key: 'add',
-      name: '添加',
-    },
-    {
-      key: 'password',
-      name: '重置密码',
-    },
-  ]
+  selectList = [];
+  userFormName = "添加用户";
 
-  // 部门树侧边栏
-  navMenuData = []
-  navMenuProp = {
-    children: 'deptVOS',
-    label: 'deptName',
-  }
+  // form列表
+  userFormList: any = {
+    deptId: null,
+    userFormList: "",
+    id: 0,
+    username: "",
+    password: "",
+    nickname: "",
+    phone: "",
+    email: "",
+    gender: 1,
+    city: "",
+    job: "",
+    personalizedSignature: ""
+  };
+  defaultForm: any = {};
 
-  // 弹窗
-  chooseTableButton: any = {}
-  formData: any = {
-    formList: [
-      {
-        key: 'username',
-        type: 'Input',
-        name: '用户名',
-        data: '',
-        placeholder: '请输入用户名',
-        rules: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-      },
-      {
-        key: 'password',
-        type: 'Input',
-        name: '密码',
-        data: '',
-        placeholder: '请输入密码',
-        rules: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-      },
-      {
-        key: 'nickname',
-        type: 'Input',
-        name: '昵称',
-        data: '',
-        placeholder: '请输入昵称',
-        rules: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
-      },
-      {
-        key: 'phone',
-        type: 'Input',
-        name: '手机',
-        data: '',
-        placeholder: '请输入手机',
-        rules: [{ required: true, message: '请输入手机', trigger: 'blur' }],
-      },
-      {
-        key: 'email',
-        type: 'Input',
-        name: '邮箱',
-        data: '',
-        placeholder: '请输入邮箱',
-        rules: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
-      },
-      // {
-      //   key: 'avatar',
-      //   type: 'upload',
-      //   name: '头像',
-      //   data: ''
-      // },
-      {
-        key: 'gender',
-        type: 'Radio',
-        name: '性别',
-        data: 1,
-        label: [
-          {
-            value: 1,
-            label: '男',
-          },
-          {
-            value: 2,
-            label: '女',
-          },
-        ],
-        rules: [{ required: true, message: '请输入性别', trigger: 'blur' }],
-      },
-      {
-        key: 'city',
-        type: 'Input',
-        name: '城市',
-        data: '',
-        placeholder: '请输入城市',
-        rules: [{ required: true, message: '请输入城市', trigger: 'blur' }],
-      },
-      {
-        key: 'job',
-        type: 'Input',
-        name: '职业',
-        data: '',
-        placeholder: '请输入职业',
-        rules: [{ required: true, message: '请输入职业', trigger: 'blur' }],
-      },
-      {
-        key: 'personalizedSignature',
-        type: 'Textarea',
-        name: '个性签名',
-        data: '',
-        placeholder: '请输入个性签名',
-        rules: [{ required: true, message: '请输入个性签名', trigger: 'blur' }],
-      },
-    ],
-  }
-  showData: any = {
-    formList: [
-      {
-        key: 'userId',
-        type: 'Select',
-        name: '选择系统',
-        data: '',
-        label: [],
-      },
-      {
-        key: 'roleIds',
-        type: 'transfer',
-        name: '角色授权',
-        defaultdata: [],
-        data: [],
-      },
-    ],
-  }
-  newFormData: any = {}
-  changeGoldDialog = false
+  rules = {
+    username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+    password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+    nickname: [{ required: true, message: "请输入昵称", trigger: "blur" }],
+    phone: [{ required: true, message: "请输入手机", trigger: "blur" }],
+    email: [{ required: true, message: "请输入邮箱", trigger: "blur" }],
+    gender: [{ required: true, message: "请输入性别", trigger: "blur" }],
+    city: [{ required: true, message: "请输入城市", trigger: "blur" }],
+    job: [{ required: true, message: "请输入职业", trigger: "blur" }],
+    personalizedSignature: [
+      { required: true, message: "请输入个性签名", trigger: "blur" }
+    ]
+  };
+
+  genderRadio = [
+    {
+      label: 1,
+      name: "男"
+    },
+    {
+      label: 2,
+      name: "女"
+    }
+  ];
+
+  // 授权角色
+  showFormList: any = {
+    id: null,
+    system: null,
+    roles: []
+  };
+
+  systemList: any = [];
+
+  transferList: any = {
+    data: [],
+    defaultdata: []
+  };
+
+  // 弹窗显示
+  editUserDialog = false;
+  showDeleteDialog = false;
+  showUserDialog = false;
+  showAdminDialog = false;
 
   mounted() {
-    this.getDeptTree()
-  }
-
-  // 分页选择当前页
-  handleSelectionChange(val: any) {
-    this.selectList = val
-  }
-
-  // 搜索框
-  handleSearch(data: any) {
-    data.forEach((item: any) => {
-      ;(this.deptList as any)[item.key] = item.name
-    })
-    this.postUserList()
+    this.getDeptTree();
+    this.getSelectDeptSysAdminListByCurrentUser();
+    this.defaultForm = JSON.parse(JSON.stringify(this.userFormList));
   }
 
   // 左边系统展示
   handleNavMenu(data: any) {
-    this.deptList.deptId = data.id
-    this.postUserList()
+    this.userList.deptId = data.id;
+    this.postUserList();
+  }
+
+  // 搜索框
+  handleSearch() {
+    this.postUserList();
+  }
+
+  // 添加按钮点击显示弹窗
+  addUser() {
+    this.userFormName = "添加用户";
+    this.editUserDialog = !this.editUserDialog;
+  }
+
+  // 删除按钮点击显示弹窗
+  deleteUser(arrId?: string[]) {
+    let id: any[] = [];
+    if (arrId) {
+      id = [arrId];
+    } else {
+      if (this.selectList.length === 0) {
+        this.$message({
+          message: "请选择至少一名用户",
+          type: "warning"
+        });
+        return;
+      }
+      this.selectList.forEach((item: any) => {
+        id.push(item.id);
+      });
+    }
+    this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning"
+    })
+      .then(() => {
+        this.deleteUserBatch(id);
+      })
+      .catch(() => {
+        this.$message({
+          type: "info",
+          message: "已取消删除"
+        });
+      });
+  }
+
+  resetPassword() {
+    if (this.selectList.length === 0) {
+      this.$message({
+        message: "请选择至少一名用户",
+        type: "warning"
+      });
+      return;
+    }
+    this.$confirm("是否重置密码?新密码为默认手机号后6位。", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning"
+    })
+      .then(() => {
+        this.postResetPassword();
+      })
+      .catch(() => {
+        this.$message({
+          type: "info",
+          message: "已取消删除"
+        });
+      });
+    // this.showAdminDialog = true;
+  }
+
+  // 分页选择当前页
+  handleSelectionChange(val: []) {
+    this.selectList = val;
   }
 
   // 分页选择
-  currentChange(index: any) {
-    this.deptList.pageIndex = index.page
-    this.deptList.length = index.limit
-    this.postUserList()
+  currentChange(index: number) {
+    this.userList.pageIndex = index;
+    this.postUserList();
   }
 
-  // 总体按钮点击弹窗
-  handleButton(type: any) {
-    if (type === 'delete') {
-      if (this.selectList.length === 0) {
-        this.$message({
-          message: '请选择至少一名用户',
-          type: 'warning',
-        })
-        return
+  // 添加/编辑按钮 关闭弹窗
+  closeUserForm() {
+    this.userFormList = JSON.parse(JSON.stringify(this.defaultForm));
+    this.editUserDialog = false;
+  }
+
+  // 显示按钮 关闭弹窗
+  closeShowForm() {
+    this.userFormList = JSON.parse(JSON.stringify(this.defaultForm));
+    this.showUserDialog = false;
+  }
+
+  // 添加/编辑用户验证
+  validUser() {
+    (this.$refs.userForm as any).validate((valid: any) => {
+      if (valid) {
+        if (this.userFormList.id !== 0) {
+          this.putUserUpdate();
+        } else {
+          this.postUserAdd();
+        }
+      } else {
+        return false;
       }
-      ;(this.chooseTableButton = {
-        type: 'formdelete',
-        name: '删除',
-        title: '确认删除',
-        dialogButton: [
-          {
-            type: 'primary',
-            value: '确认',
-          },
-          {
-            type: 'info',
-            value: '取消',
-          },
-        ],
-      }),
-        (this.changeGoldDialog = true)
-    }
-    // 添加
-    if (type === 'add') {
-      this.chooseTableButton = {
-        type: 'add',
-        name: '添加',
-        title: '添加用户',
-        dialogButton: [
-          {
-            type: 'primary',
-            value: '确认',
-          },
-        ],
-      }
-      this.newFormData = JSON.parse(JSON.stringify(this.formData))
-      this.changeGoldDialog = true
-    }
-    // 重置密码
-    if (type === 'password') {
-      if (this.selectList.length === 0) {
-        this.$message({
-          message: '请选择至少一名用户',
-          type: 'warning',
-        })
-        return
-      }
-      this.chooseTableButton = {
-        type: 'password',
-        title: '重置密码',
-        dialogButton: [
-          {
-            type: 'primary',
-            value: '确认',
-          },
-          {
-            type: 'info',
-            value: '取消',
-          },
-        ],
-      }
-      this.changeGoldDialog = true
-    }
+    });
   }
 
-  // table点击弹窗
-  handleTableButton(val: any, item: any) {
-    item.id = val.id
-    this.chooseTableButton = item
-
-    if (item.type === 'accredit') {
-      this.getSelectDeptSysAdminListByCurrentUser()
-    } else if (item.type === 'edit') {
-      this.getUserDetail(val.id)
-    } else {
-      this.changeGoldDialog = true
-    }
-  }
-
-  // 弹窗按钮点击
-  handleDialogButton(index: any) {
-    const type = this.chooseTableButton.type
-    switch (type) {
-      case 'accredit':
-        this.handleAccredit()
-        break
-      case 'edit':
-        ;(this.$refs.formRefs as any).submitForm()
-        break
-      case 'delete':
-        this.handleDelete(index)
-        break
-      case 'formdelete':
-        this.handleFormdelete(index)
-        break
-      case 'add':
-        ;(this.$refs.formRefs as any).submitForm()
-        break
-      case 'password':
-        this.handlePassword(index)
-        break
-      default:
-        this.changeGoldDialog = false
-    }
-  }
-
-  // 总体删除按钮
-  handleFormdelete(index: any) {
-    if (index === 0) {
-      let idArr: any = []
-      this.selectList.forEach((item: any) => {
-        idArr.push(item.id)
-      })
-      this.deleteUserBatch(idArr)
-    }
-  }
-
-  // 编辑/添加提交操作
-  handleValidate(arrId?: any) {
-    let submitData: any = {}
-    this.updateData.formList.forEach((item: any) => {
-      submitData[item.key] = item.data
-    })
-    submitData.deptId = this.deptList.deptId
-    submitData.avatar = ''
-    if (this.chooseTableButton.id) {
-      submitData.id = this.chooseTableButton.id
-      this.putUserUpdate(submitData)
-    } else {
-      this.postUserAdd(submitData)
-    }
-  }
-
-  // 重置密码
-  handlePassword(index: any) {
-    if (index === 0) {
-      this.postResetPassword()
-    } else {
-      this.changeGoldDialog = false
-    }
-  }
-
-  // 授权角色
-  handleAccredit() {
-    let submitData: any = {}
-    this.updateShowData.formList.forEach((item: any) => {
-      submitData[item.key] = item.data
-    })
-    this.postUserRoles(submitData)
-  }
-
-  // table删除单个角色
-  handleDelete(index: any) {
-    if (index === 0) {
-      this.deleteUserBatch()
-    } else {
-      this.changeGoldDialog = false
-    }
-  }
-
-  close() {
-    this.changeGoldDialog = false
-  }
-
-  // 监听form值变化
-  updateData: any = {}
-  @Watch('newFormData', { immediate: true, deep: true })
-  onChangeFormData(newVal: string[], oldVal: string) {
-    this.updateData = newVal
-  }
-
-  updateShowData: any = {}
-  @Watch('showData', { immediate: true, deep: true })
-  onChangeFormShowData(newVal: string[], oldVal: string) {
-    this.updateShowData = newVal
+  // 授权角色按钮
+  handleUser(index: number) {
+    this.showFormList.id = index;
+    this.showUserDialog = true;
   }
 
   // 接口调取
-  // 分页查询部门树
+  // 分页查询用户树
   getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000,
-    }
+      pageSize: 1000
+    };
     getDeptTree(params).then((response: any) => {
-      const content = this.treeData(response.data.content)
-      this.navMenuData = content
-      this.deptList.deptId = content[0].id
-      this.postUserList()
-    })
+      const content = response.data.content;
+      this.navMenuData = content;
+      this.userList.deptId = content[0].id;
+      this.userFormList.deptId = content[0].id;
+      this.postUserList();
+    });
   }
-  treeData(data: any) {
-    data.forEach((element: any) => {
-      if (element.deptVOS.length === 0) {
-        element.deptVOS = undefined
-      } else {
-        this.treeData(element.deptVOS)
-      }
-    })
-    return data
-  }
-
   // 分页查询用户
   postUserList() {
-    const params = this.deptList
+    const params = JSON.parse(JSON.stringify(this.userList));
+    params.id = Number(params.id);
     postUserList(params).then((response: any) => {
-      this.tableData = response.data
-    })
+      this.tableData = response.data;
+    });
   }
 
   // 授权角色
   getSelectDeptSysAdminListByCurrentUser() {
     getSelectDeptSysAdminListByCurrentUser().then((response: any) => {
       response.data.forEach((item: any) => {
-        this.showData.formList[0].label.push({
+        this.systemList.push({
           value: item.id,
-          label: item.systemName,
-        })
-      })
-      this.showData.formList[0].data = response.data[0].id
-      this.getSelectRoleListByUserIdAndSysId(response.data[0].id)
-      this.changeGoldDialog = true
-    })
+          label: item.systemName
+        });
+      });
+    });
   }
 
   // 授权角色 选择部门
   getSelectRoleListByUserIdAndSysId(index: any) {
     const params = {
       sysId: index,
-      userId: this.chooseTableButton.id,
-    }
+      userId: this.showFormList.id
+    };
     getSelectRoleListByUserIdAndSysId(params).then((response: any) => {
-      const data = response.data
+      const data = response.data;
+      this.transferList.data = [];
+      this.transferList.defaultdata = [];
+      const allHaveList = response.data.haveList.concat(
+        response.data.noHaveList
+      );
       data.haveList.forEach((item: any) => {
-        this.showData.formList[1].data.push({
-          key: item.id,
-          label: item.roleName,
-        })
-      })
+        this.transferList.data.push(item.id);
+      });
 
-      data.noHaveList.forEach((item: any) => {
-        this.showData.formList[1].defaultdata.push({
+      allHaveList.forEach((item: any) => {
+        this.transferList.defaultdata.push({
           key: item.id,
-          label: item.roleName,
-        })
-      })
-    })
+          label: item.roleName
+        });
+      });
+    });
   }
 
   // 编辑按钮 回显
-  getUserDetail(id: any) {
+  getUserDetail(id: number) {
+    this.userFormList.id = id;
     getUserDetail(id).then((response: any) => {
-      this.newFormData = JSON.parse(JSON.stringify(this.formData))
-      this.newFormData.formList.forEach((element: any) => {
-        element.data = response.data[element.key]
-      })
-      this.changeGoldDialog = true
-    })
+      Object.keys(this.userFormList).forEach(key => {
+        this.userFormList[key] = response.data[key];
+      });
+      this.userFormName = "编辑用户";
+      this.editUserDialog = true;
+    });
   }
 
   // 添加用户提交
-  postUserAdd(data: any) {
-    postUserAdd(data).then((response: any) => {
-      this.postUserList()
-      this.changeGoldDialog = false
-    })
+  postUserAdd() {
+    postUserAdd(this.userFormList).then((response: any) => {
+      this.postUserList();
+      this.closeUserForm();
+    });
   }
 
   // 编辑提交
-  putUserUpdate(data: any) {
-    putUserUpdate(data).then((response: any) => {
-      this.postUserList()
-      this.changeGoldDialog = false
-    })
+  putUserUpdate() {
+    putUserUpdate(this.userFormList).then((response: any) => {
+      this.postUserList();
+      this.closeUserForm();
+    });
   }
 
   // 删除列表
-  deleteUserBatch(arrId?: any) {
-    const id = arrId ? arrId : [this.chooseTableButton.id]
+  deleteUserBatch(arrId: string[]) {
+    const id = arrId ? arrId : this.selectList;
     deleteUserBatch(id).then((response: any) => {
-      this.postUserList()
-      this.changeGoldDialog = false
-    })
+      this.$message({
+        type: "success",
+        message: "删除成功!"
+      });
+      this.postUserList();
+    });
   }
 
   // 重置密码
   postResetPassword() {
-    const id: any = []
+    const id: any = [];
     this.selectList.forEach((item: any) => {
-      id.push(item.id)
-    })
+      id.push(item.id);
+    });
     postResetPassword(id).then((response: any) => {
-      this.postUserList()
-      this.changeGoldDialog = false
-    })
+      this.$message({
+        type: "success",
+        message: "重置成功!"
+      });
+      this.postUserList();
+    });
   }
 
   // 授权提交
-  postUserRoles(data: any) {
-    postUserRoles(data).then((response: any) => {
-      this.postUserList()
-      this.changeGoldDialog = false
-    })
+  postUserRoles() {
+    const params = {
+      roleIds: this.transferList.data,
+      userId: this.showFormList.id
+    };
+    postUserRoles(params).then((response: any) => {
+      this.postUserList();
+      this.showUserDialog = false;
+    });
   }
 }
 </script>
 <style lang="scss" scoped>
-@import '@/styles/functions.scss';
-@import '@/styles/mixins.scss';
+@import "@/styles/functions.scss";
+@import "@/styles/mixins.scss";
 
-.page1 {
+.user {
   background: white;
   padding: dim(30) dim(20);
   position: relative;
+  margin: dim(20);
   .contain {
     width: 100%;
     display: flex;
     margin-bottom: dim(40);
     .left {
-      width: dim(160);
+      width: dim(200);
       border: dim(1) solid #eee;
     }
     .right {
       padding: 0 dim(20);
       flex: 1;
       height: 100%;
+    }
+  }
+  .showList {
+    text-align: left;
+    margin-top: dim(20);
+    font-size: dim(20);
+    color: #606266;
+    .item {
+      margin-right: dim(10);
+    }
+  }
+}
+.company-content__dialog__center {
+  height: 100%;
+  width: 100%;
+}
+
+.components_search {
+  display: flex;
+  margin-bottom: dim(10);
+  .el-input {
+    width: dim(140);
+    margin-right: dim(10);
+    display: flex;
+    align-items: center;
+    ::v-deep .el-input__inner {
+      height: dim(30) !important;
+    }
+    ::v-deep .el-input__suffix {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .el-select {
+    margin-right: dim(10);
+    ::v-deep .el-input__inner {
+      height: dim(30) !important;
+    }
+    ::v-deep .el-input__suffix {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .el-button {
+    height: 30px;
+    line-height: 30px;
+    padding: 0 30px;
+  }
+}
+
+.components_handleList {
+  display: flex;
+  height: dim(36);
+  margin-bottom: dim(20);
+}
+
+.pagination-container {
+  background: #fff;
+  padding: 32px 16px;
+}
+.pagination-container.hidden {
+  display: none;
+}
+
+.tableList {
+  width: 100%;
+  .el-form {
+    margin: dim(20) dim(20) 0 dim(20);
+  }
+  .el-select {
+    width: 100%;
+  }
+  ::v-deep .el-transfer {
+    text-align: left;
+    .el-transfer-panel {
+      width: 160px;
+    }
+    .el-transfer__button {
+      padding: 10px;
     }
   }
 }

@@ -1,414 +1,331 @@
 <template>
-  <div class="page1">
-    <Search :searchList="searchList" @handle-search="handleSearch" />
-    <Button :buttonList="buttonList" @handle-button="handleButton" />
-    <div class="contain">
-      <div class="left">
-        <NavMenu :data="navMenuData" :defaultProps="navMenuProp" @handle-navmenu="handleNavMenu" />
-      </div>
-      <div class="right">
-        <Table
-          :fields="fields"
-          :tableData="tableData.content"
-          :tableButton="tableButton"
-          @handle-selection-change="handleSelectionChange"
-          @handle-table-button="handleTableButton"
-        />
-      </div>
+  <div class="department">
+    <div class="components_search">
+      <el-input
+        placeholder="id"
+        v-model="departmentList.id"
+        clearable
+      ></el-input>
+      <el-input
+        placeholder="部门名称"
+        v-model="departmentList.departmentType"
+        clearable
+      ></el-input>
+      <el-button @click="handleSearch">搜索</el-button>
     </div>
-    <div class="footer">
-      <pagination
-        :total="tableData.totalPages ? tableData.totalPages : 0"
-        @pagination="currentChange"
-      />
+    <div class="components_handleList">
+      <el-button type="primary" @click="addDepartment">添加</el-button>
+      <el-button type="danger" @click="deleteDepartment()">删除</el-button>
+      <el-button type="primary" @click="adminDepartment"
+        >设置部门系统管理员</el-button
+      >
     </div>
 
-    <Dialog
-      :width="chooseTableButton.width"
-      v-if="changeGoldDialog"
-      :buttons="chooseTableButton.dialogButton"
-      class="company-content__dialog"
-      :title="chooseTableButton.title"
-      @close="close"
-      @button-click="handleDialogButton"
-    >
-      <div class="company-content__dialog__center">
-        <Form
-          ref="formRefs"
-          v-if="
-            (chooseTableButton.type === 'edit') |
-              (chooseTableButton.type === 'add')
-          "
-          :formData="newFormData"
-          @handle-validate="handleValidate"
-        />
-        <div
-          v-if="
-            (chooseTableButton.type === 'delete') |
-              (chooseTableButton.type === 'formdelete')
-          "
-        >是否确认删除</div>
-        <Show v-if="chooseTableButton.type === 'show'" :formData="newFormData" />
-        <System :parentId="deptList.parentId" v-if="chooseTableButton.type === 'system'" />
+    <div class="contain">
+      <div class="left">
+        <el-tree
+          :data="navMenuData"
+          highlight-current
+          :props="navMenuProp"
+          @node-click="handleNavMenu"
+        ></el-tree>
       </div>
-    </Dialog>
+      <div class="right">
+        <el-table
+          :data="tableData.content"
+          tooltip-effect="dark"
+          style="width: 100%"
+          row-key="id"
+          :header-cell-style="{ background: '#eef1f6', color: '#606266' }"
+          @selection-change="handleSelectionChange"
+        >
+          >
+          <el-table-column align="center" type="selection"></el-table-column>
+          <el-table-column
+            prop="id"
+            align="center"
+            label="ID"
+          ></el-table-column>
+          <el-table-column
+            prop="deptName"
+            align="center"
+            label="部门名称"
+          ></el-table-column>
+          <el-table-column
+            prop="tag"
+            align="center"
+            label="备注"
+          ></el-table-column>
+          <el-table-column fixed="right" align="center" label="操作">
+            <template slot-scope="scope">
+              <el-button
+                type="primary"
+                size="mini"
+                @click="getDepartmentDetail(scope.row.id)"
+                >编辑</el-button
+              >
+              <el-button
+                type="danger"
+                size="mini"
+                @click="deleteDepartment(scope.row.id)"
+                >删除</el-button
+              >
+              <el-button
+                type="primary"
+                size="mini"
+                @click="getShowDepartmentDetail(scope.row.id)"
+                >显示</el-button
+              >
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <div class="pagination-container">
+      <el-pagination
+        background
+        @current-change="currentChange"
+        :page-sizes="[10, 20, 30, 50]"
+        layout="sizes, prev, pager, next, jumper"
+        :total="tableData.total"
+      ></el-pagination>
+    </div>
+
+    <el-dialog
+      :title="departmentFormName"
+      center
+      :visible.sync="editDepartmentDialog"
+      @close="closeDepartmentForm"
+      width="30%"
+    >
+      <div class="tableList">
+        <el-form
+          ref="departmentForm"
+          :model="departmentFormList"
+          :rules="rules"
+          label-width="80px"
+        >
+          <el-form-item label="部门名称" prop="deptName">
+            <el-input
+              placeholder="请输入部门名称"
+              v-model="departmentFormList.deptName"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="排序" prop="sort">
+            <el-input
+              placeholder="请输入排序"
+              v-model="departmentFormList.sort"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="备注" prop="tag">
+            <el-input
+              placeholder="请输入备注"
+              v-model="departmentFormList.tag"
+            ></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="closeDepartmentForm">取 消</el-button>
+        <el-button type="primary" @click="validDepartment">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      title=""
+      center
+      :visible.sync="showDepartmentDialog"
+      @close="closeShowForm"
+      width="30%"
+    >
+      <div class="show">
+        <div class="showList">
+          <span class="item">部门名称:</span>
+          <span>{{ departmentFormList.deptName }}</span>
+        </div>
+        <div class="showList">
+          <span class="item">排序:</span>
+          <span>{{ departmentFormList.sort }}</span>
+        </div>
+        <div class="showList">
+          <span class="item">备注:</span>
+          <span>{{ departmentFormList.tag }}</span>
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="closeShowForm">关闭</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      title="设置部门系统管理员"
+      center
+      :visible.sync="showAdminDialog"
+      width="80%"
+    >
+      <div class="show">
+        <System :parentId="departmentList.parentId" />
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="showAdminDialog = false">关闭</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch } from 'vue-property-decorator'
-import Search from '@/views/user/components/Search/index.vue'
-import Button from '@/views/user/components/Button/index.vue'
-import NavMenu from '@/views/user/components/NavMenu/index.vue'
-import Table from '@/views/user/components/Table/index.vue'
-import Pagination from '@/components/Pagination/index.vue'
-import Dialog from '@/views/user/components/dialog/Dialog.vue'
-import Form from '@/views/user/components/Form/index.vue'
-import Show from './components/Show.vue'
-import System from './components/System.vue'
+import { Vue, Component, Watch } from "vue-property-decorator";
+import System from "./components/System.vue";
 import {
   getDeptTree,
   postDeptList,
   getDeptDetail,
   postDeptUpdate,
   postDeptAdd,
-  postDeptDelete,
-} from '@/api/department'
+  postDeptDelete
+} from "@/api/department";
 
 @Component({
-  components: {
-    Search,
-    Button,
-    NavMenu,
-    Table,
-    Pagination,
-    Dialog,
-    Form,
-    Show,
-    System,
-  },
+  components: { System }
 })
-export default class Page1 extends Vue {
+export default class department extends Vue {
+  // 部门树侧边栏
+  navMenuData = [];
+  navMenuProp = {
+    children: "deptVOS",
+    label: "deptName"
+  };
   // table列表
-  deptList = {
+  departmentList: any = {
     pageIndex: 1,
     length: 1000,
-    parentId: 0,
-    deptName: '',
+    departmentType: "",
+    parentId: null,
+    id: null
+  };
+
+  tableData: any = {};
+
+  selectList = [];
+  departmentFormName = "添加部门";
+
+  // form列表
+  departmentFormList: any = {
     id: 0,
-  }
-  fields = [
-    {
-      prop: 'id',
-      label: 'id',
-    },
-    {
-      prop: 'deptName',
-      label: '部门名称',
-    },
-    {
-      prop: 'tag',
-      label: '备注',
-    },
-  ]
-  tableData: any = {}
-  tableButton = [
-    {
-      type: 'edit',
-      name: '编辑',
-      title: '编辑部门',
-      buttonType: 'primary',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-      ],
-    },
-    {
-      type: 'delete',
-      name: '删除',
-      title: '确认删除',
-      buttonType: 'danger',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-        {
-          type: 'info',
-          value: '取消',
-        },
-      ],
-    },
-    {
-      type: 'show',
-      name: '显示',
-      title: '显示系统信息',
-      buttonType: 'info',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '关闭',
-        },
-      ],
-    },
-  ]
-  selectList = []
+    deptName: "",
+    sort: "",
+    tag: ""
+  };
+  defaultForm: any = {};
 
-  // 搜索框
-  searchList = [
-    {
-      type: 'Input',
-      key: 'deptName',
-      name: '',
-      placeholder: '部门名称',
-    },
-  ]
+  rules = {
+    deptName: [{ required: true, message: "请输入部门名称", trigger: "blur" }],
+    sort: [{ required: true, message: "请输入排序", trigger: "blur" }],
+    tag: [{ required: true, message: "请输入备注", trigger: "blur" }]
+  };
 
-  // 部门树侧边栏
-  navMenuData = []
-  navMenuProp = {
-    children: 'deptVOS',
-    label: 'deptName',
-  }
-
-  // 弹窗
-  chooseTableButton: any = {}
-  formData: any = {
-    formList: [
-      {
-        key: 'deptName',
-        type: 'Input',
-        name: '部门名称',
-        data: '',
-        placeholder: '请输入部门名称',
-        rules: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
-      },
-      // {
-      //   key: 'father',
-      //   type: 'Select',
-      //   name: '父名称',
-      //   data: 'yi',
-      //   label: [
-      //     {
-      //       value: 'yi',
-      //       label: '部门一',
-      //     },
-      //     {
-      //       value: 'er',
-      //       label: '部门二',
-      //     }
-      //   ],
-      //   rules: [
-      //     { required: true, message: "请输入父名称", trigger: "blur" }
-      //   ]
-      // },
-      {
-        key: 'sort',
-        type: 'Input',
-        name: '排序',
-        data: '',
-        placeholder: '请输入排序',
-        rules: [{ required: true, message: '请输入排序', trigger: 'blur' }],
-      },
-      {
-        key: 'tag',
-        type: 'Textarea',
-        name: '备注',
-        data: '',
-        placeholder: '请输入备注',
-        rules: [{ required: true, message: '请输入备注', trigger: 'blur' }],
-      },
-    ],
-  }
-  newFormData: any = {}
-  changeGoldDialog = false
-
-  // 列表按钮控制
-  buttonList = [
-    {
-      key: 'delete',
-      name: '删除',
-    },
-    {
-      key: 'add',
-      name: '添加',
-    },
-    {
-      key: 'admin',
-      name: '设置部门系统管理员',
-    },
-  ]
+  // 弹窗显示
+  editDepartmentDialog = false;
+  showDeleteDialog = false;
+  showDepartmentDialog = false;
+  showAdminDialog = false;
 
   mounted() {
-    this.getDeptTree()
-  }
-
-  // 分页选择当前页
-  handleSelectionChange(val: any) {
-    this.selectList = val
-  }
-
-  // 搜索框
-  handleSearch(data: any) {
-    data.forEach((item: any) => {
-      ;(this.deptList as any)[item.key] = item.name
-    })
-    this.postDeptList()
+    this.getDeptTree();
+    this.defaultForm = JSON.parse(JSON.stringify(this.departmentFormList));
   }
 
   // 左边系统展示
   handleNavMenu(data: any) {
-    this.deptList.parentId = data.id
-    this.postDeptList()
+    this.departmentList.parentId = data.id;
+    this.postDepartmentList();
+  }
+
+  // 搜索框
+  handleSearch() {
+    this.postDepartmentList();
+  }
+
+  // 添加按钮点击显示弹窗
+  addDepartment() {
+    this.departmentFormName = "添加部门";
+    this.editDepartmentDialog = !this.editDepartmentDialog;
+  }
+
+  // 删除按钮点击显示弹窗
+  deleteDepartment(arrId?: string[]) {
+    let id: any[] = [];
+    if (arrId) {
+      id = [arrId];
+    } else {
+      if (this.selectList.length === 0) {
+        this.$message({
+          message: "请选择至少一名用户",
+          type: "warning"
+        });
+        return;
+      }
+      this.selectList.forEach((item: any) => {
+        id.push(item.id);
+      });
+    }
+    this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning"
+    })
+      .then(() => {
+        this.postDepartmentDelete(id);
+      })
+      .catch(() => {
+        this.$message({
+          type: "info",
+          message: "已取消删除"
+        });
+      });
+  }
+
+  // 设置管理员
+  adminDepartment() {
+    this.showAdminDialog = true;
+  }
+
+  // 分页选择当前页
+  handleSelectionChange(val: []) {
+    this.selectList = val;
   }
 
   // 分页选择
-  currentChange(index: any) {
-    this.deptList.pageIndex = index.page
-    this.deptList.length = index.limit
-    this.postDeptList()
+  currentChange(index: number) {
+    this.departmentList.pageIndex = index;
+    this.postDepartmentList();
   }
 
-  // 总体按钮点击弹窗
-  handleButton(type: any) {
-    if (type === 'delete') {
-      if (this.selectList.length === 0) {
-        this.$message({
-          message: '请选择至少一名用户',
-          type: 'warning',
-        })
-        return
+  // 添加/编辑按钮 关闭弹窗
+  closeDepartmentForm() {
+    this.departmentFormList = JSON.parse(JSON.stringify(this.defaultForm));
+    this.editDepartmentDialog = false;
+  }
+
+  // 显示按钮 关闭弹窗
+  closeShowForm() {
+    this.departmentFormList = JSON.parse(JSON.stringify(this.defaultForm));
+    this.showDepartmentDialog = false;
+  }
+
+  // 添加/编辑部门验证
+  validDepartment() {
+    (this.$refs.departmentForm as any).validate((valid: any) => {
+      if (valid) {
+        if (this.departmentFormList.id !== 0) {
+          this.postDepartmentUpdate();
+        } else {
+          this.postDepartmentAdd();
+        }
+      } else {
+        return false;
       }
-      ;(this.chooseTableButton = {
-        type: 'formdelete',
-        name: '删除',
-        title: '确认删除',
-        dialogButton: [
-          {
-            type: 'primary',
-            value: '确认',
-          },
-          {
-            type: 'info',
-            value: '取消',
-          },
-        ],
-      }),
-        (this.changeGoldDialog = true)
-    }
-    // 添加
-    if (type === 'add') {
-      this.chooseTableButton = {
-        type: 'add',
-        name: '添加',
-        title: '添加部门',
-        dialogButton: [
-          {
-            type: 'primary',
-            value: '确认',
-          },
-        ],
-      }
-      this.newFormData = JSON.parse(JSON.stringify(this.formData))
-      this.changeGoldDialog = true
-    }
-    // 设置管理员
-    if (type === 'admin') {
-      this.chooseTableButton = {
-        type: 'system',
-        title: '设置系统部门管理员',
-        dialogButton: [
-          {
-            type: 'primary',
-            value: '关闭',
-          },
-        ],
-      }
-      this.changeGoldDialog = true
-    }
-  }
-
-  // table点击弹窗
-  handleTableButton(val: any, item: any) {
-    item.id = val.id
-    this.chooseTableButton = item
-
-    if (item.type === 'edit' || item.type === 'show') {
-      this.getDeptDetail(val.id)
-    } else {
-      this.changeGoldDialog = true
-    }
-  }
-
-  // 弹窗按钮点击
-  handleDialogButton(index: any) {
-    const type = this.chooseTableButton.type
-    switch (type) {
-      case 'show':
-        this.changeGoldDialog = false
-        break
-      case 'edit':
-        ;(this.$refs.formRefs as any).submitForm()
-        break
-      case 'delete':
-        this.handleDelete(index)
-        break
-      case 'formdelete':
-        this.handleFormdelete(index)
-        break
-      case 'add':
-        ;(this.$refs.formRefs as any).submitForm()
-        break
-      default:
-        this.changeGoldDialog = false
-    }
-  }
-
-  // 总体删除按钮
-  handleFormdelete(index: any) {
-    if (index === 0) {
-      let idArr: any = []
-      this.selectList.forEach((item: any) => {
-        idArr.push(item.id)
-      })
-      this.postDeptDelete(idArr)
-    }
-    this.changeGoldDialog = false
-  }
-
-  // 编辑/添加提交操作
-  handleValidate(arrId: any) {
-    let submitData: any = {}
-    this.updateData.formList.forEach((item: any) => {
-      submitData[item.key] = item.data
-    })
-    if (this.chooseTableButton.id) {
-      submitData.id = this.chooseTableButton.id
-      this.postDeptUpdate(submitData)
-    } else {
-      this.postDeptAdd(submitData)
-    }
-  }
-
-  // 列表删除按钮
-  handleDelete(index: any) {
-    if (index === 0) {
-      this.postDeptDelete()
-    } else {
-      this.changeGoldDialog = false
-    }
-  }
-
-  close() {
-    this.changeGoldDialog = false
-  }
-
-  // 监听form值变化
-  updateData: any = {}
-  @Watch('newFormData', { immediate: true, deep: true })
-  onChangeFormData(newVal: string[], oldVal: string) {
-    this.updateData = newVal
+    });
   }
 
   // 接口调取
@@ -416,67 +333,81 @@ export default class Page1 extends Vue {
   getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000,
-    }
+      pageSize: 1000
+    };
     getDeptTree(params).then((response: any) => {
-      const content = response.data.content
-      this.navMenuData = content
-      this.deptList.parentId = content[0].id
-
-      this.postDeptList()
-    })
+      const content = response.data.content;
+      this.navMenuData = content;
+      this.departmentList.parentId = content[0].id;
+      this.postDepartmentList();
+    });
   }
   // 分页查询部门
-  postDeptList() {
-    const params = this.deptList
-    params.id = Number(params.id)
+  postDepartmentList() {
+    const params = JSON.parse(JSON.stringify(this.departmentList));
+    params.id = Number(params.id);
     postDeptList(params).then((response: any) => {
-      this.tableData = response.data
-    })
+      this.tableData = response.data;
+    });
   }
 
   // 编辑按钮 回显
-  getDeptDetail(id: any) {
+  getDepartmentDetail(id: number) {
+    this.departmentFormList.id = id;
     getDeptDetail(id).then((response: any) => {
-      this.newFormData = JSON.parse(JSON.stringify(this.formData))
-      this.newFormData.formList.forEach((element: any) => {
-        element.data = response.data[element.key]
-      })
-      this.changeGoldDialog = true
-    })
+      Object.keys(this.departmentFormList).forEach(key => {
+        this.departmentFormList[key] = response.data[key];
+      });
+      this.departmentFormName = "编辑部门";
+      this.editDepartmentDialog = true;
+    });
+  }
+
+  // 显示按钮 回显
+  getShowDepartmentDetail(id: number) {
+    this.departmentFormList.id = id;
+    getDeptDetail(id).then((response: any) => {
+      Object.keys(this.departmentFormList).forEach(key => {
+        this.departmentFormList[key] = response.data[key];
+      });
+      this.showDepartmentDialog = true;
+    });
   }
 
   // 添加部门提交
-  postDeptAdd(data: any) {
-    postDeptAdd(data).then((response: any) => {
-      this.postDeptList()
-      this.changeGoldDialog = false
-    })
+  postDepartmentAdd() {
+    postDeptAdd(this.departmentFormList).then((response: any) => {
+      this.postDepartmentList();
+      this.closeDepartmentForm();
+    });
   }
 
   // 编辑提交
-  postDeptUpdate(data: any) {
-    postDeptUpdate(data).then((response: any) => {
-      this.postDeptList()
-      this.changeGoldDialog = false
-    })
+  postDepartmentUpdate() {
+    postDeptUpdate(this.departmentFormList).then((response: any) => {
+      this.postDepartmentList();
+      this.closeDepartmentForm();
+    });
   }
 
   // 删除列表
-  postDeptDelete(arrId?: any) {
-    const id = arrId ? arrId : [this.chooseTableButton.id]
+  postDepartmentDelete(arrId: string[]) {
+    const id = arrId ? arrId : this.selectList;
     postDeptDelete(id).then((response: any) => {
-      this.postDeptList()
-      this.changeGoldDialog = false
-    })
+      this.$message({
+        type: "success",
+        message: "删除成功!"
+      });
+      this.postDepartmentList();
+    });
   }
 }
 </script>
 <style lang="scss" scoped>
-@import '@/styles/functions.scss';
-@import '@/styles/mixins.scss';
+@import "@/styles/functions.scss";
+@import "@/styles/mixins.scss";
 
-.page1 {
+.department {
   background: white;
   padding: dim(30) dim(20);
   position: relative;
@@ -495,9 +426,65 @@ export default class Page1 extends Vue {
       height: 100%;
     }
   }
+  .showList {
+    text-align: left;
+    margin-top: dim(20);
+    font-size: dim(20);
+    color: #606266;
+    .item {
+      margin-right: dim(10);
+    }
+  }
 }
 .company-content__dialog__center {
   height: 100%;
   width: 100%;
+}
+
+.components_search {
+  display: flex;
+  margin-bottom: dim(10);
+  .el-input {
+    width: dim(140);
+    margin-right: dim(10);
+    display: flex;
+    align-items: center;
+    ::v-deep .el-input__inner {
+      height: dim(30) !important;
+    }
+    ::v-deep .el-input__suffix {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .el-select {
+    margin-right: dim(10);
+    ::v-deep .el-input__inner {
+      height: dim(30) !important;
+    }
+    ::v-deep .el-input__suffix {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .el-button {
+    height: 30px;
+    line-height: 30px;
+    padding: 0 30px;
+  }
+}
+
+.components_handleList {
+  display: flex;
+  height: dim(36);
+  margin-bottom: dim(20);
+}
+
+.pagination-container {
+  background: #fff;
+  padding: 32px 16px;
+}
+.pagination-container.hidden {
+  display: none;
 }
 </style>

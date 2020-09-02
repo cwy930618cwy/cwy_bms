@@ -1,266 +1,230 @@
 <template>
   <div class="system">
-    <Search :searchList="searchList" @handle-search="handleSearch" />
-    <Button :buttonList="buttonList" @handle-button="handleButton" />
+    <div class="components_search">
+      <el-input placeholder="id" v-model="systemList.id" clearable></el-input>
+      <el-input
+        placeholder="用户名"
+        v-model="systemList.username"
+        clearable
+      ></el-input>
+      <el-input
+        placeholder="手机"
+        v-model="systemList.phone"
+        clearable
+      ></el-input>
+      <el-button @click="handleSearch">搜索</el-button>
+    </div>
+
+    <div class="components_handleList">
+      <el-button type="primary" size="mini" @click="setAdmin()"
+        >设置管理员</el-button
+      >
+    </div>
+
     <div class="contain">
       <div class="left">
-        <NavMenu :data="navMenuData" :defaultProps="navMenuProp" @handle-navmenu="handleNavMenu" />
+        <el-tree
+          :data="navMenuData"
+          highlight-current
+          :props="navMenuProp"
+          @node-click="handleNavMenu"
+        ></el-tree>
       </div>
       <div class="right">
-        <Table
-          :fields="fields"
-          :tableData="tableData.content"
-          @handle-selection-change="handleSelectionChange"
-        />
+        <el-table
+          :data="tableData.content"
+          tooltip-effect="dark"
+          style="width: 100%"
+          row-key="id"
+          :header-cell-style="{ background: '#eef1f6', color: '#606266' }"
+          @selection-change="handleSelectionChanges"
+        >
+          <el-table-column align="center" type="selection"></el-table-column>
+          <el-table-column
+            prop="id"
+            align="center"
+            label="ID"
+          ></el-table-column>
+          <el-table-column
+            prop="username"
+            align="center"
+            label="用户名"
+          ></el-table-column>
+          <el-table-column
+            prop="nickname"
+            align="center"
+            label="昵称"
+          ></el-table-column>
+          <el-table-column
+            prop="phone"
+            align="center"
+            label="手机"
+          ></el-table-column>
+          <el-table-column
+            prop="email"
+            align="center"
+            label="邮箱"
+          ></el-table-column>
+          <el-table-column
+            prop="gender"
+            align="center"
+            label="性别"
+          ></el-table-column>
+        </el-table>
       </div>
     </div>
-    <div class="footer">
-      <pagination
-        :total="tableData.totalPages ? tableData.totalPages : 0"
-        @pagination="currentChange"
-      />
+
+    <div class="pagination-container">
+      <el-pagination
+        background
+        @current-change="currentChange"
+        :page-sizes="[10, 20, 30, 50]"
+        layout="sizes, prev, pager, next, jumper"
+        :total="tableData.total"
+      ></el-pagination>
     </div>
-    <Dialog
-      :width="chooseTableButton.width"
-      v-if="changeGold"
-      :buttons="chooseTableButton.dialogButton"
-      class="company-content__dialog"
-      :title="chooseTableButton.title"
-      @close="close"
-      @button-click="handleDialogButton"
-    >
-      <div class="company-content__dialog__center">
-        <div>确定设置管理员</div>
-      </div>
-    </Dialog>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch, Prop } from 'vue-property-decorator'
-import Search from '@/views/user/components/Search/index.vue'
-import Button from '@/views/user/components/Button/index.vue'
-import Table from '@/views/user/components/Table/index.vue'
-import Dialog from '@/views/user/components/dialog/Dialog.vue'
-import NavMenu from '@/views/user/components/NavMenu/index.vue'
-import Form from '@/views/user/components/Form/index.vue'
-import Pagination from '@/components/Pagination/index.vue'
-import { postUserList } from '@/api/department'
-import { getDeptTree } from '@/api/department'
-import { postAllocationSysAdmin } from '@/api/childSystem'
-
-@Component({
-  components: { Search, Table, Dialog, Form, Pagination, NavMenu, Button },
-})
-export default class Show extends Vue {
-  @Prop({ default: () => [] }) parentId!: any
-
-  // table列表
-  userList = {
-    pageIndex: 1,
-    length: 1000,
-    deptId: 0,
-  }
-  fields = [
-    {
-      prop: 'id',
-      label: 'id',
-    },
-    {
-      prop: 'username',
-      label: '用户名',
-    },
-    {
-      prop: 'nickname',
-      label: '昵称',
-    },
-    {
-      prop: 'phone',
-      label: '手机',
-    },
-    {
-      prop: 'email',
-      label: '邮箱',
-    },
-    {
-      prop: 'gender',
-      label: '性别',
-    },
-  ]
-  tableData: any = []
-  selectList = []
-
-  // 列表按钮控制
-  buttonList = [
-    {
-      key: 'admin',
-      name: '设置管理员',
-    },
-  ]
+import { Vue, Component, Prop } from "vue-property-decorator";
+import { postUserList } from "@/api/department";
+import { getDeptTree } from "@/api/department";
+import { postAllocationSysAdmin } from "@/api/childSystem";
+@Component
+export default class system extends Vue {
+  @Prop({ default: () => [] }) parentId!: any;
 
   // 部门树侧边栏
-  navMenuData = []
+  navMenuData = [];
   navMenuProp = {
-    children: 'deptVOS',
-    label: 'deptName',
-  }
+    children: "deptVOS",
+    label: "deptName"
+  };
+  // table列表
+  systemList: any = {
+    pageIndex: 1,
+    length: 1000,
+    id: null,
+    deptId: null
+  };
 
-  // 搜索框
-  searchList = [
-    {
-      type: 'Input',
-      key: 'username',
-      name: '',
-      placeholder: '用户名',
-    },
-    {
-      type: 'Input',
-      key: 'phone',
-      name: '',
-      placeholder: '手机',
-    },
-  ]
+  selectList = [];
+  tableData: any = {};
 
-  // 弹窗
-  chooseTableButton: any = {}
-  formSystemData: any = {
-    formList: [
-      {
-        key: 'bumen',
-        type: 'Checkbox',
-        name: '所属系统',
-        data: [],
-        rules: [],
-        defaultdata: [],
-      },
-    ],
-  }
+  // form列表
+  systemFormList: any = {
+    id: null,
+    systemName: []
+  };
+  defaultSystemData: any = [];
 
-  changeGold = false
+  rules = {
+    systemName: [{ required: true, message: "请选择所属系统", trigger: "blur" }]
+  };
+
+  // 弹窗显示
+  editSystemDialog = false;
 
   mounted() {
-    this.getUcDeptTree()
-  }
-
-  // 分页选择当前页
-  handleSelectionChange(val: any) {
-    this.selectList = val
-  }
-
-  // 搜索框
-  handleSearch(data: any) {
-    data.forEach((item: any) => {
-      ;(this.userList as any)[item.key] = item.name
-    })
-    this.postUserList()
+    this.getDeptTree();
   }
 
   // 左边系统展示
   handleNavMenu(data: any) {
-    this.userList.deptId = data.id
-    this.postUserList()
+    this.systemList.deptId = data.id;
+    this.postUserList();
+  }
+
+  // 搜索框
+  handleSearch() {
+    this.postUserList();
+  }
+
+  // 分页选择当前页
+  handleSelectionChanges(val: []) {
+    this.selectList = val;
   }
 
   // 分页选择
-  currentChange(index: any) {
-    this.userList.pageIndex = index.page
-    this.userList.length = index.limit
-    this.postUserList()
+  currentChange(index: number) {
+    this.systemList.pageIndex = index;
+    this.postUserList();
   }
 
-  // 总体按钮点击弹窗
-  handleButton(index: any) {
+  setAdmin(id: number) {
     if (this.selectList.length === 0) {
       this.$message({
-        message: '请选择至少一名用户',
-        type: 'warning',
+        message: "请选择至少一名用户",
+        type: "warning"
+      });
+      return;
+    }
+    this.$confirm("确定设置管理员, 是否继续?", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning"
+    })
+      .then(() => {
+        this.postAllocationSysAdmin();
       })
-      return
-    }
-    ;(this.chooseTableButton = {
-      type: 'edit',
-      name: '设置管理员',
-      title: '设置管理员',
-      buttonType: 'primary',
-      dialogButton: [
-        {
-          type: 'primary',
-          value: '确认',
-        },
-        {
-          type: 'info',
-          value: '取消',
-        },
-      ],
-    }),
-      (this.changeGold = true)
-  }
-
-  // 弹窗按钮点击
-  handleDialogButton(index: any) {
-    if (index === 0) {
-      this.postAllocationSysAdmin()
-    } else {
-      this.changeGold = false
-    }
-  }
-
-  close() {
-    this.changeGold = false
-  }
-
-  // 监听form值变化
-  updateSystemData: any = {}
-  @Watch('formSystemData', { immediate: true, deep: true })
-  onChangeFormData(newVal: string[], oldVal: string) {
-    this.updateSystemData = newVal
+      .catch(() => {
+        this.$message({
+          type: "info",
+          message: "已取消设置管理员"
+        });
+      });
   }
 
   // 接口调取
   // 分页查询部门树
-  getUcDeptTree() {
+  getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000,
-    }
+      pageSize: 1000
+    };
     getDeptTree(params).then((response: any) => {
-      const content = response.data.content
-      this.navMenuData = content
-      this.userList.deptId = content[0].id
-      this.postUserList()
-    })
+      const content = response.data.content;
+      this.navMenuData = content;
+      this.systemList.deptId = content[0].id;
+      this.postUserList();
+    });
   }
   // 分页查询用户第三方信息
   postUserList() {
-    postUserList(this.userList).then((response: any) => {
-      this.tableData = response.data
-    })
+    postUserList(this.systemList).then((response: any) => {
+      this.tableData = response.data;
+    });
   }
-
   // 确认分配系统管理员
   postAllocationSysAdmin() {
-    let idArr: any = []
+    let idArr: any = [];
     this.selectList.forEach((item: any) => {
-      idArr.push(item.id)
-    })
+      idArr.push(item.id);
+    });
     const params = {
-      systemIdList: [this.userList.deptId],
-      userIdList: idArr,
-    }
-    console.log('sss', params)
+      systemIdList: [this.systemList.deptId],
+      userIdList: idArr
+    };
 
     postAllocationSysAdmin(params).then((response: any) => {
-      this.postUserList()
-      this.changeGold = false
-    })
+      this.postUserList();
+      this.$message({
+        type: "info",
+        message: "已成功设置管理员"
+      });
+    });
   }
 }
 </script>
 <style lang="scss" scoped>
-@import '@/styles/functions.scss';
-@import '@/styles/mixins.scss';
+@import "@/styles/functions.scss";
+@import "@/styles/mixins.scss";
 
 .system {
-  width: dim(900);
+  background: white;
+  padding: dim(30) dim(20);
+  position: relative;
+  margin: dim(20);
   .contain {
     width: 100%;
     display: flex;
@@ -275,12 +239,65 @@ export default class Show extends Vue {
       height: 100%;
     }
   }
-  .footer {
-    display: flex;
+  .showList {
+    text-align: left;
+    margin-top: dim(20);
+    font-size: dim(20);
+    color: #606266;
+    .item {
+      margin-right: dim(10);
+    }
   }
-  ::v-deep .el-checkbox-group {
+}
+.company-content__dialog__center {
+  height: 100%;
+  width: 100%;
+}
+
+.components_search {
+  display: flex;
+  margin-bottom: dim(10);
+  .el-input {
+    width: dim(140);
+    margin-right: dim(10);
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
+    ::v-deep .el-input__inner {
+      height: dim(30) !important;
+    }
+    ::v-deep .el-input__suffix {
+      display: flex;
+      align-items: center;
+    }
   }
+  .el-select {
+    margin-right: dim(10);
+    ::v-deep .el-input__inner {
+      height: dim(30) !important;
+    }
+    ::v-deep .el-input__suffix {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .el-button {
+    height: 30px;
+    line-height: 30px;
+    padding: 0 30px;
+  }
+}
+
+.components_handleList {
+  display: flex;
+  height: dim(36);
+  margin-bottom: dim(20);
+}
+
+.pagination-container {
+  background: #fff;
+  padding: 32px 16px;
+}
+.pagination-container.hidden {
+  display: none;
 }
 </style>

@@ -4,40 +4,36 @@
   </component>
 </template>
 
-<script>
-import { isExternal } from '@/utils/validate'
+<script lang="ts">
+import { isExternal } from "@/utils/validate";
 
-export default {
-  props: {
-    to: {
-      type: String,
-      required: true
+import { Vue, Component, Prop } from "vue-property-decorator";
+
+@Component
+export default class Link extends Vue {
+  @Prop({ default: "" }) to!: string;
+
+  get isExternal() {
+    return isExternal(this.to);
+  }
+  get type() {
+    if (this.isExternal) {
+      return "a";
     }
-  },
-  computed: {
-    isExternal() {
-      return isExternal(this.to)
-    },
-    type() {
-      if (this.isExternal) {
-        return 'a'
-      }
-      return 'router-link'
-    }
-  },
-  methods: {
-    linkProps(to) {
-      if (this.isExternal) {
-        return {
-          href: to,
-          target: '_blank',
-          rel: 'noopener'
-        }
-      }
+    return "router-link";
+  }
+
+  linkProps(to: any) {
+    if (this.isExternal) {
       return {
-        to: to
-      }
+        href: to,
+        target: "_blank",
+        rel: "noopener"
+      };
     }
+    return {
+      to: to
+    };
   }
 }
 </script>

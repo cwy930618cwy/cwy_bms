@@ -1,25 +1,36 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
-import getters from './getters'
+import Vue from "vue";
+import Vuex from "vuex";
+import app from "@/store/app";
+import error from "@/store/error";
+import permission from "@/store/permission";
+import settings from "@/store/settings";
+import tagsView from "@/store/tagsView";
+import user from "@/store/user";
+import { appState } from "@/store/app/state";
+import { errorState } from "@/store/error/state";
+import { permissionState } from "@/store/permission/state";
+import { settingsState } from "@/store/settings/state";
+import { tagsState } from "@/store/tagsView/state";
+import { userState } from "@/store/user/state";
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
-// https://webpack.js.org/guides/dependency-management/#requirecontext
-const modulesFiles = require.context('./modules', true, /\.js$/)
+export type State = {
+  app: appState;
+  error: errorState;
+  permission: permissionState;
+  settings: settingsState;
+  tagsView: tagsState;
+  user: userState;
+};
 
-// you do not need `import app from './modules/app'`
-// it will auto require all vuex module from modules file
-const modules = modulesFiles.keys().reduce((modules: any, modulePath) => {
-  // set './app.js' => 'app'
-  const moduleName = modulePath.replace(/^\.\/(.*)\.\w+$/, '$1')
-  const value = modulesFiles(modulePath)
-  modules[moduleName] = value.default
-  return modules
-}, {})
-
-const store = new Vuex.Store({
-  modules,
-  getters
-})
-
-export default store
+export default new Vuex.Store<State>({
+  modules: {
+    app,
+    error,
+    permission,
+    settings,
+    tagsView,
+    user
+  }
+});

@@ -1,46 +1,49 @@
 <template>
-  <div v-if="isExternal" :style="styleExternalIcon" class="svg-external-icon svg-icon" v-on="$listeners" />
+  <div
+    v-if="isExternal"
+    :style="styleExternalIcon"
+    class="svg-external-icon svg-icon"
+    v-on="$listeners"
+  />
   <svg v-else :class="svgClass" aria-hidden="true" v-on="$listeners">
     <use :xlink:href="iconName" />
   </svg>
 </template>
 
-<script>
-// doc: https://panjiachen.github.io/vue-element-admin-site/feature/component/svg-icon.html#usage
-import { isExternal } from '@/utils/validate'
+<script lang="ts">
+import { isExternal } from "@/utils/validate";
+import { Vue, Component, Prop } from "vue-property-decorator";
+@Component
+export default class SvgIcon extends Vue {
+  @Prop({ default: "" }) iconClass!: string;
+  @Prop({ default: "" }) className?: String;
 
-export default {
-  name: 'SvgIcon',
-  props: {
-    iconClass: {
-      type: String,
-      required: true
-    },
-    className: {
-      type: String,
-      default: ''
+  mounted() {
+    console.log("className--", this.className);
+    console.log("iconClass---", this.iconClass);
+  }
+
+  get isExternal() {
+    return isExternal(this.iconClass);
+  }
+
+  get iconName() {
+    return `#icon-${this.iconClass}`;
+  }
+
+  get svgClass() {
+    if (this.className) {
+      return "svg-icon " + this.className;
+    } else {
+      return "svg-icon";
     }
-  },
-  computed: {
-    isExternal() {
-      return isExternal(this.iconClass)
-    },
-    iconName() {
-      return `#icon-${this.iconClass}`
-    },
-    svgClass() {
-      if (this.className) {
-        return 'svg-icon ' + this.className
-      } else {
-        return 'svg-icon'
-      }
-    },
-    styleExternalIcon() {
-      return {
-        mask: `url(${this.iconClass}) no-repeat 50% 50%`,
-        '-webkit-mask': `url(${this.iconClass}) no-repeat 50% 50%`
-      }
-    }
+  }
+
+  get styleExternalIcon() {
+    return {
+      mask: `url(${this.iconClass}) no-repeat 50% 50%`,
+      "-webkit-mask": `url(${this.iconClass}) no-repeat 50% 50%`
+    };
   }
 }
 </script>
@@ -56,7 +59,7 @@ export default {
 
 .svg-external-icon {
   background-color: currentColor;
-  mask-size: cover!important;
+  mask-size: cover !important;
   display: inline-block;
 }
 </style>
