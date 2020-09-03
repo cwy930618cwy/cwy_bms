@@ -2,7 +2,7 @@ import request from "@/utils/request";
 
 export function login(data: any) {
   return request({
-    url: "http://172.16.10.202:9999/uc/local/login/v1/uc-login",
+    url: "/uc/local/login/v1/uc-login",
     method: "post",
     data
   });

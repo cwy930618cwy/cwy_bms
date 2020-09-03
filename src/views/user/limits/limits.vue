@@ -2,16 +2,8 @@
   <div class="content">
     <div class="components_search">
       <el-input placeholder="id" v-model="limitList.id" clearable></el-input>
-      <el-input
-        placeholder="权限名称"
-        v-model="limitList.name"
-        clearable
-      ></el-input>
-      <el-input
-        placeholder="权限标识"
-        v-model="limitList.value"
-        clearable
-      ></el-input>
+      <el-input placeholder="权限名称" v-model="limitList.name" clearable></el-input>
+      <el-input placeholder="权限标识" v-model="limitList.value" clearable></el-input>
       <el-select v-model="limitList.relSystemId" placeholder="请选择所属系统">
         <el-option
           v-for="(item, index) in systemList"
@@ -37,32 +29,13 @@
     >
       <el-table-column align="center" type="selection"></el-table-column>
       <el-table-column prop="id" align="center" label="ID"></el-table-column>
-      <el-table-column prop="name" align="center" label="权限名称">
-      </el-table-column>
-      <el-table-column
-        prop="value"
-        align="center"
-        label="权限值"
-      ></el-table-column>
-      <el-table-column
-        prop="remark"
-        align="center"
-        label="备注"
-      ></el-table-column>
+      <el-table-column prop="name" align="center" label="权限名称"></el-table-column>
+      <el-table-column prop="value" align="center" label="权限值"></el-table-column>
+      <el-table-column prop="remark" align="center" label="备注"></el-table-column>
       <el-table-column fixed="right" align="center" label="操作">
         <template slot-scope="scope">
-          <el-button
-            type="primary"
-            size="mini"
-            @click="getPermissionDetail(scope.row.id)"
-            >编辑</el-button
-          >
-          <el-button
-            type="danger"
-            size="mini"
-            @click="deleteLimit(scope.row.id)"
-            >删除</el-button
-          >
+          <el-button type="primary" size="mini" @click="getPermissionDetail(scope.row.id)">编辑</el-button>
+          <el-button type="danger" size="mini" @click="deleteLimit(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -74,6 +47,7 @@
         :page-sizes="[10, 20, 30, 50]"
         layout="sizes, prev, pager, next, jumper"
         :total="tableData.total"
+        @size-change="handleSizeChange"
       ></el-pagination>
     </div>
 
@@ -85,17 +59,9 @@
       width="30%"
     >
       <div class="tableList">
-        <el-form
-          ref="addForm"
-          :model="limitFormList"
-          :rules="rules"
-          label-width="80px"
-        >
+        <el-form ref="addForm" :model="limitFormList" :rules="rules" label-width="80px">
           <el-form-item label="所属系统" prop="relSystemId">
-            <el-select
-              v-model="limitFormList.relSystemId"
-              placeholder="所属系统"
-            >
+            <el-select v-model="limitFormList.relSystemId" placeholder="所属系统">
               <el-option
                 v-for="(item, index) in systemList"
                 :key="index"
@@ -105,10 +71,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="权限名称" prop="name">
-            <el-input
-              placeholder="请输入权限名称"
-              v-model="limitFormList.name"
-            ></el-input>
+            <el-input placeholder="请输入权限名称" v-model="limitFormList.name"></el-input>
           </el-form-item>
           <el-form-item label="父级权限" prop="parentId">
             <el-tree
@@ -127,27 +90,17 @@
                 :label="item.label"
                 v-for="(item, index) in activeRadio"
                 :key="index"
-                >{{ item.name }}</el-radio
-              >
+              >{{ item.name }}</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="前端路径" prop="url">
-            <el-input
-              placeholder="请输入前端路径"
-              v-model="limitFormList.url"
-            ></el-input>
+            <el-input placeholder="请输入前端路径" v-model="limitFormList.url"></el-input>
           </el-form-item>
           <el-form-item label="图标" prop="icon">
-            <el-input
-              placeholder="请输入图标"
-              v-model="limitFormList.icon"
-            ></el-input>
+            <el-input placeholder="请输入图标" v-model="limitFormList.icon"></el-input>
           </el-form-item>
           <el-form-item label="备注" prop="remark">
-            <el-input
-              placeholder="请输入备注"
-              v-model="limitFormList.remark"
-            ></el-input>
+            <el-input placeholder="请输入备注" v-model="limitFormList.remark"></el-input>
           </el-form-item>
         </el-form>
       </div>
@@ -159,268 +112,271 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch } from "vue-property-decorator";
-import { getDeptTree } from "@/api/department";
+import { Vue, Component, Watch } from 'vue-property-decorator'
+import { getDeptTree } from '@/api/department'
 import {
   getPermissionList,
   getPermissionDetail,
   postPermissionAdd,
   postPermissionUpdate,
-  postPermissionDelete
-} from "@/api/limit";
-import { getSelectSysAdminListByCurrentUser } from "@/api/character";
+  postPermissionDelete,
+} from '@/api/limit'
+import { getSelectSysAdminListByCurrentUser } from '@/api/character'
 
 @Component({
-  components: {}
+  components: {},
 })
 export default class limit extends Vue {
   // 搜索
-  systemList: any = [];
+  systemList: any = []
   // 树形控件
   treeData = {
     data: [],
     defaultProps: {
-      children: "deptVOS",
-      label: "deptName"
-    }
-  };
+      children: 'deptVOS',
+      label: 'deptName',
+    },
+  }
   // table列表
   limitList = {
     pageIndex: 1,
     length: 1000,
-    name: "",
-    value: "",
+    name: '',
+    value: '',
     relSystemId: null,
-    id: null
-  };
+    id: null,
+  }
 
-  tableData: any = {};
+  tableData: any = {}
 
-  selectList = [];
-  limitFormName = "添加子系统";
+  selectList = []
+  limitFormName = '添加子系统'
 
   // form列表
   limitFormList: any = {
     id: -1,
-    relSystemId: "",
-    name: "",
+    relSystemId: '',
+    name: '',
     parentId: [],
-    type: "",
-    url: "",
-    icon: "",
-    remark: ""
-  };
-  defaultForm: any = {};
+    type: '',
+    url: '',
+    icon: '',
+    remark: '',
+  }
+  defaultForm: any = {}
 
   rules = {
     relSystemId: [
-      { required: true, message: "请输入所属系统", trigger: "blur" }
+      { required: true, message: '请输入所属系统', trigger: 'blur' },
     ],
-    name: [{ required: true, message: "请输入权限名称", trigger: "blur" }],
-    parentId: [{ required: true, message: "请输入父级权限", trigger: "blur" }],
-    type: [{ required: true, message: "请输入权限类型", trigger: "blur" }],
-    url: [{ required: true, message: "请输入前端路径", trigger: "blur" }],
-    icon: [{ required: true, message: "请输入图标", trigger: "blur" }],
-    remark: [{ required: true, message: "请输入备注", trigger: "blur" }]
-  };
+    name: [{ required: true, message: '请输入权限名称', trigger: 'blur' }],
+    parentId: [{ required: true, message: '请输入父级权限', trigger: 'blur' }],
+    type: [{ required: true, message: '请输入权限类型', trigger: 'blur' }],
+    url: [{ required: true, message: '请输入前端路径', trigger: 'blur' }],
+    icon: [{ required: true, message: '请输入图标', trigger: 'blur' }],
+    remark: [{ required: true, message: '请输入备注', trigger: 'blur' }],
+  }
 
   activeRadio = [
     {
-      name: "目录",
-      label: 0
+      name: '目录',
+      label: 0,
     },
     {
-      name: "菜单",
-      label: 1
+      name: '菜单',
+      label: 1,
     },
     {
-      name: "按钮",
-      label: 2
-    }
-  ];
+      name: '按钮',
+      label: 2,
+    },
+  ]
 
   // 弹窗显示
-  showAddDialog = false;
-  showDeleteDialog = false;
+  showAddDialog = false
+  showDeleteDialog = false
 
   mounted() {
-    this.getSelectSysAdminListByCurrentUser();
-    this.getDeptTree();
-    this.defaultForm = JSON.parse(JSON.stringify(this.limitFormList));
+    this.getSelectSysAdminListByCurrentUser()
+    this.getDeptTree()
+    this.defaultForm = JSON.parse(JSON.stringify(this.limitFormList))
   }
 
   // 搜索框
   handleSearch() {
-    this.getPermissionList();
+    this.getPermissionList()
   }
 
   // 添加按钮点击显示弹窗
   addLimit() {
-    this.limitFormName = "添加子系统";
-    this.showAddDialog = !this.showAddDialog;
+    this.limitFormName = '添加子系统'
+    this.showAddDialog = !this.showAddDialog
   }
 
   // 删除按钮点击显示弹窗
   deleteLimit(arrId?: string[]) {
-    let id: any[] = [];
+    let id: any[] = []
     if (arrId) {
-      id = [arrId];
+      id = [arrId]
     } else {
       if (this.selectList.length === 0) {
         this.$message({
-          message: "请选择至少一名用户",
-          type: "warning"
-        });
-        return;
+          message: '请选择至少一名用户',
+          type: 'warning',
+        })
+        return
       }
       this.selectList.forEach((item: any) => {
-        id.push(item.id);
-      });
+        id.push(item.id)
+      })
     }
-    this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning"
+    this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     })
       .then(() => {
-        this.postPermissionDelete(id);
+        this.postPermissionDelete(id)
         this.$message({
-          type: "success",
-          message: "删除成功!"
-        });
+          type: 'success',
+          message: '删除成功!',
+        })
       })
       .catch(() => {
         this.$message({
-          type: "info",
-          message: "已取消删除"
-        });
-      });
+          type: 'info',
+          message: '已取消删除',
+        })
+      })
   }
 
   // 分页选择当前页
   handleSelectionChange(val: []) {
-    this.selectList = val;
+    this.selectList = val
+  }
+
+  // 每页显示多少
+  handleSizeChange(val: any) {
+    this.limitList.length = val
   }
 
   // 分页选择
   currentChange(index: number) {
-    this.limitList.pageIndex = index;
-    this.getPermissionList();
+    this.limitList.pageIndex = index
+    this.getPermissionList()
   }
 
   // 添加/编辑按钮 关闭弹窗
   closeLimitForm() {
-    this.limitFormList = JSON.parse(JSON.stringify(this.defaultForm));
-    this.showAddDialog = false;
+    this.limitFormList = JSON.parse(JSON.stringify(this.defaultForm))
+    this.showAddDialog = false
   }
 
   // 添加/编辑系统验证
   validLimit() {
-    (this.$refs.addForm as any).validate((valid: any) => {
+    ;(this.$refs.addForm as any).validate((valid: any) => {
       if (valid) {
-        if (this.limitFormList.id !== 0) {
-          this.postPermissionUpdate();
+        if (this.limitFormList.id >= 0) {
+          this.postPermissionUpdate()
         } else {
-          this.postPermissionAdd();
+          this.postPermissionAdd()
         }
       } else {
-        return false;
+        return false
       }
-    });
+    })
   }
 
   nodeClick(item: { id: any }) {
-    this.limitFormList.parentId = item.id;
+    this.limitFormList.parentId = item.id
   }
 
   // 接口调取
   // 获取权限列表
   getSelectSysAdminListByCurrentUser() {
     getSelectSysAdminListByCurrentUser().then((response: any) => {
-      this.limitList.relSystemId = response.data[0].id;
-      this.limitFormList.relSystemId = response.data[0].id;
       response.data.forEach((item: any) => {
         this.systemList.push({
           value: item.id,
-          label: item.systemName
-        });
-      });
-    });
+          label: item.systemName,
+        })
+      })
+    })
   }
   // 分页查询权限
   getPermissionList() {
-    const params = JSON.parse(JSON.stringify(this.limitList));
-    params.id = Number(params.id);
+    const params = JSON.parse(JSON.stringify(this.limitList))
+    params.id = Number(params.id)
     getPermissionList(params).then((response: any) => {
-      this.tableData = response.data;
-    });
+      this.tableData = response.data
+    })
   }
 
   // 编辑按钮 回显
   getPermissionDetail(id: number) {
-    const self = this;
-    this.limitFormList.id = id;
+    const self = this
+    this.limitFormList.id = id
     getPermissionDetail({ id: id }).then((response: any) => {
-      Object.keys(this.limitFormList).forEach(key => {
-        this.limitFormList[key] = response.data[key];
-      });
-      this.limitFormName = "编辑子系统";
-      this.showAddDialog = true;
+      Object.keys(this.limitFormList).forEach((key) => {
+        this.limitFormList[key] = response.data[key]
+      })
+      this.limitFormName = '编辑子系统'
+      this.showAddDialog = true
       if (!!response.data.parentId) {
         this.$nextTick(() => {
-          console.log(this.$refs.treeRef);
-          (this.$refs.treeRef as any).setCurrentKey(
+          console.log(this.$refs.treeRef)
+          ;(this.$refs.treeRef as any).setCurrentKey(
             this.limitFormList.parentId
-          );
-        });
+          )
+        })
       }
-    });
+    })
   }
 
   // 添加权限提交
   postPermissionAdd() {
     postPermissionAdd(this.limitFormList).then((response: any) => {
-      this.getPermissionList();
-      this.closeLimitForm();
-    });
+      this.getPermissionList()
+      this.closeLimitForm()
+    })
   }
 
   // 编辑提交
   postPermissionUpdate() {
     postPermissionUpdate(this.limitFormList).then((response: any) => {
-      this.getPermissionList();
-      this.closeLimitForm();
-    });
+      this.getPermissionList()
+      this.closeLimitForm()
+    })
   }
 
   // 删除列表
   postPermissionDelete(arrId: string[]) {
-    const id = arrId ? arrId : this.selectList;
+    const id = arrId ? arrId : this.selectList
     postPermissionDelete(id).then((response: any) => {
       this.$message({
-        type: "success",
-        message: "删除成功!"
-      });
-      this.getPermissionList();
-    });
+        type: 'success',
+        message: '删除成功!',
+      })
+      this.getPermissionList()
+    })
   }
 
   // 分页查询部门树
   getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000
-    };
+      pageSize: 1000,
+    }
     getDeptTree(params).then((response: any) => {
-      const content = response.data.content;
-      this.treeData.data = content;
-    });
+      const content = response.data.content
+      this.treeData.data = content
+    })
   }
 }
 </script>
 <style lang="scss" scoped>
-@import "@/styles/functions.scss";
-@import "@/styles/mixins.scss";
+@import '@/styles/functions.scss';
+@import '@/styles/mixins.scss';
 
 .content {
   background: white;

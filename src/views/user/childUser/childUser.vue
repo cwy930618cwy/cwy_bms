@@ -1,17 +1,8 @@
 <template>
   <div class="user">
     <div class="components_search">
-      <!-- <el-input placeholder="id" v-model="userList.id" clearable></el-input> -->
-      <el-input
-        placeholder="用户名"
-        v-model="userList.username"
-        clearable
-      ></el-input>
-      <el-input
-        placeholder="手机"
-        v-model="userList.phone"
-        clearable
-      ></el-input>
+      <el-input placeholder="用户名" v-model="userList.username" clearable></el-input>
+      <el-input placeholder="手机" v-model="userList.phone" clearable></el-input>
       <el-button @click="handleSearch">搜索</el-button>
     </div>
     <div class="components_handleList">
@@ -40,56 +31,26 @@
         >
           >
           <el-table-column align="center" type="selection"></el-table-column>
-          <el-table-column
-            prop="id"
-            align="center"
-            label="ID"
-          ></el-table-column>
-          <el-table-column
-            prop="username"
-            align="center"
-            label="用户名"
-          ></el-table-column>
-          <el-table-column
-            prop="nickname"
-            align="center"
-            label="昵称"
-          ></el-table-column>
-          <el-table-column
-            prop="phone"
-            align="center"
-            label="手机"
-          ></el-table-column>
-          <el-table-column
-            prop="email"
-            align="center"
-            label="邮箱"
-          ></el-table-column>
-          <el-table-column
-            prop="gender"
-            align="center"
-            label="性别"
-          ></el-table-column>
+          <el-table-column prop="username" align="center" label="用户名"></el-table-column>
+          <el-table-column prop="nickname" align="center" label="昵称"></el-table-column>
+          <el-table-column prop="phone" align="center" label="手机"></el-table-column>
+          <el-table-column prop="email" align="center" label="邮箱"></el-table-column>
+          <el-table-column prop="gender" align="center" label="性别"></el-table-column>
           <el-table-column fixed="right" align="center" label="操作">
             <template slot-scope="scope">
               <el-button
                 type="primary"
                 size="mini"
-                @click="handleUser(scope.row.id)"
-                >授权角色</el-button
-              >
+                @click="getSelectSysAdminListByCurrentUserForAllocationDeptSysAdmin(scope.row.id)"
+              >设置部门管理员</el-button>
               <el-button
                 type="primary"
                 size="mini"
-                @click="getUserDetail(scope.row.id)"
-                >编辑</el-button
-              >
-              <el-button
-                type="danger"
-                size="mini"
-                @click="deleteUser(scope.row.id)"
-                >删除</el-button
-              >
+                @click="getSelectSysAdminListByCurrentUserForAllocationDeptSysAdmin(scope.row.id)"
+              >设置系统管理员</el-button>
+              <el-button type="primary" size="mini" @click="handleUser(scope.row.id)">授权角色</el-button>
+              <el-button type="primary" size="mini" @click="getUserDetail(scope.row.id)">编辑</el-button>
+              <el-button type="danger" size="mini" @click="deleteUser(scope.row.id)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -103,6 +64,7 @@
         :page-sizes="[10, 20, 30, 50]"
         layout="sizes, prev, pager, next, jumper"
         :total="tableData.total"
+        @size-change="handleSizeChange"
       ></el-pagination>
     </div>
 
@@ -114,41 +76,21 @@
       width="30%"
     >
       <div class="tableList">
-        <el-form
-          ref="userForm"
-          :model="userFormList"
-          :rules="rules"
-          label-width="80px"
-        >
+        <el-form ref="userForm" :model="userFormList" :rules="rules" label-width="80px">
           <el-form-item label="用户名" prop="username">
-            <el-input
-              placeholder="请输入用户名"
-              v-model="userFormList.username"
-            ></el-input>
+            <el-input placeholder="请输入用户名" v-model="userFormList.username"></el-input>
           </el-form-item>
           <el-form-item label="密码" prop="password">
-            <el-input
-              placeholder="请输入密码"
-              v-model="userFormList.password"
-            ></el-input>
+            <el-input placeholder="请输入密码" v-model="userFormList.password"></el-input>
           </el-form-item>
           <el-form-item label="昵称" prop="nickname">
-            <el-input
-              placeholder="请输入昵称"
-              v-model="userFormList.nickname"
-            ></el-input>
+            <el-input placeholder="请输入昵称" v-model="userFormList.nickname"></el-input>
           </el-form-item>
           <el-form-item label="手机" prop="phone">
-            <el-input
-              placeholder="请输入手机"
-              v-model="userFormList.phone"
-            ></el-input>
+            <el-input placeholder="请输入手机" v-model="userFormList.phone"></el-input>
           </el-form-item>
           <el-form-item label="邮箱" prop="email">
-            <el-input
-              placeholder="请输入邮箱"
-              v-model="userFormList.email"
-            ></el-input>
+            <el-input placeholder="请输入邮箱" v-model="userFormList.email"></el-input>
           </el-form-item>
           <el-form-item label="性别" prop="gender">
             <el-radio-group v-model="userFormList.gender">
@@ -156,27 +98,17 @@
                 :label="item.label"
                 v-for="(item, index) in genderRadio"
                 :key="index"
-                >{{ item.name }}</el-radio
-              >
+              >{{ item.name }}</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="城市" prop="city">
-            <el-input
-              placeholder="请输入城市"
-              v-model="userFormList.city"
-            ></el-input>
+            <el-input placeholder="请输入城市" v-model="userFormList.city"></el-input>
           </el-form-item>
           <el-form-item label="职业" prop="job">
-            <el-input
-              placeholder="请输入职业"
-              v-model="userFormList.job"
-            ></el-input>
+            <el-input placeholder="请输入职业" v-model="userFormList.job"></el-input>
           </el-form-item>
           <el-form-item label="个性签名" prop="personalizedSignature">
-            <el-input
-              placeholder="请输入个性签名"
-              v-model="userFormList.personalizedSignature"
-            ></el-input>
+            <el-input placeholder="请输入个性签名" v-model="userFormList.personalizedSignature"></el-input>
           </el-form-item>
         </el-form>
       </div>
@@ -186,20 +118,9 @@
       </span>
     </el-dialog>
 
-    <el-dialog
-      title=""
-      center
-      :visible.sync="showUserDialog"
-      @close="closeShowForm"
-      width="60%"
-    >
+    <el-dialog title center :visible.sync="showUserDialog" @close="closeShowForm" width="60%">
       <div class="tableList">
-        <el-form
-          ref="userForm"
-          :model="showFormList"
-          :rules="rules"
-          label-width="80px"
-        >
+        <el-form ref="userForm" :model="showFormList" :rules="rules" label-width="80px">
           <el-form-item label="系统" prop="system">
             <el-select
               v-model="showFormList.system"
@@ -215,10 +136,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="授权角色" prop="roles">
-            <el-transfer
-              v-model="transferList.data"
-              :data="transferList.defaultdata"
-            ></el-transfer>
+            <el-transfer v-model="transferList.data" :data="transferList.defaultdata"></el-transfer>
           </el-form-item>
         </el-form>
       </div>
@@ -226,11 +144,63 @@
         <el-button type="primary" @click="postUserRoles">确认</el-button>
       </span>
     </el-dialog>
+
+    <el-dialog
+      title="选择子系统"
+      center
+      :visible.sync="showDeptDialog"
+      :append-to-body="true"
+      width="50%"
+    >
+      <div class="tableList">
+        <el-form ref="systemForm" :model="deptFormList" :rules="rules" label-width="80px">
+          <el-form-item label="所属系统" prop="deptName">
+            <el-checkbox-group v-model="deptFormList.systemName">
+              <el-checkbox
+                v-for="(childItem, childIndex) in defaultDeptData"
+                :key="childIndex"
+                :label="childItem.value"
+              >{{ childItem.label }} {{childItem.checked}}</el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="showDeptDialog = false">取 消</el-button>
+        <el-button type="primary" @click="getAllocationDeptSysAdmin">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      title="选择子系统"
+      center
+      :visible.sync="showAdminDialog"
+      :append-to-body="true"
+      width="50%"
+    >
+      <div class="tableList">
+        <el-form ref="systemForm" :model="systemFormList" :rules="rules" label-width="80px">
+          <el-form-item label="所属系统" prop="deptName">
+            <el-checkbox-group v-model="systemFormList.systemName">
+              <el-checkbox
+                v-for="(childItem, childIndex) in defaultSystemData"
+                :key="childIndex"
+                :label="childItem.value"
+              >{{ childItem.label }}</el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="showAdminDialog = false">取 消</el-button>
+        <el-button type="primary" @click="getAllocationDeptSysAdmin">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch } from "vue-property-decorator";
-import { getDeptTree, postUserList } from "@/api/department";
+import { Vue, Component, Watch } from 'vue-property-decorator'
+import { getDeptTree, postUserList } from '@/api/department'
 import {
   getUserDetail,
   postResetPassword,
@@ -239,215 +209,250 @@ import {
   deleteUserBatch,
   postUserRoles,
   getSelectRoleListByUserIdAndSysId,
-  getSelectDeptSysAdminListByCurrentUser
-} from "@/api/childUser";
+  getSelectDeptSysAdminListByCurrentUser,
+  getSelectSysAdminListByCurrentUserForAllocationSysAdmin,
+  getAllocationSysAdmin,
+  getSelectSysAdminListByCurrentUserForAllocationDeptSysAdmin,
+  getAllocationDeptSysAdmin,
+} from '@/api/childUser'
 @Component({
-  components: {}
+  components: {},
 })
 export default class user extends Vue {
   // 用户树侧边栏
-  navMenuData = [];
+  navMenuData = []
   navMenuProp = {
-    children: "deptVOS",
-    label: "deptName"
-  };
+    children: 'deptVOS',
+    label: 'deptName',
+  }
   // table列表
   userList: any = {
     pageIndex: 1,
-    length: 1000,
-    deptId: null
-  };
+    length: 10,
+    deptId: null,
+  }
 
-  tableData: any = {};
+  tableData: any = {}
 
-  selectList = [];
-  userFormName = "添加用户";
+  selectList = []
+  userFormName = '添加用户'
 
   // form列表
   userFormList: any = {
     deptId: null,
-    userFormList: "",
+    userFormList: '',
     id: 0,
-    username: "",
-    password: "",
-    nickname: "",
-    phone: "",
-    email: "",
+    username: '',
+    password: '',
+    nickname: '',
+    phone: '',
+    email: '',
     gender: 1,
-    city: "",
-    job: "",
-    personalizedSignature: ""
-  };
-  defaultForm: any = {};
+    city: '',
+    job: '',
+    personalizedSignature: '',
+  }
+  defaultForm: any = {}
 
   rules = {
-    username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-    password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-    nickname: [{ required: true, message: "请输入昵称", trigger: "blur" }],
-    phone: [{ required: true, message: "请输入手机", trigger: "blur" }],
-    email: [{ required: true, message: "请输入邮箱", trigger: "blur" }],
-    gender: [{ required: true, message: "请输入性别", trigger: "blur" }],
-    city: [{ required: true, message: "请输入城市", trigger: "blur" }],
-    job: [{ required: true, message: "请输入职业", trigger: "blur" }],
+    username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+    password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+    nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+    phone: [{ required: true, message: '请输入手机', trigger: 'blur' }],
+    email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
+    gender: [{ required: true, message: '请输入性别', trigger: 'blur' }],
+    city: [{ required: true, message: '请输入城市', trigger: 'blur' }],
+    job: [{ required: true, message: '请输入职业', trigger: 'blur' }],
     personalizedSignature: [
-      { required: true, message: "请输入个性签名", trigger: "blur" }
-    ]
-  };
+      { required: true, message: '请输入个性签名', trigger: 'blur' },
+    ],
+  }
 
   genderRadio = [
     {
       label: 1,
-      name: "男"
+      name: '男',
     },
     {
       label: 2,
-      name: "女"
-    }
-  ];
+      name: '女',
+    },
+  ]
+
+  // 系统管理员
+  systemFormList: any = {
+    id: null,
+    systemName: [],
+  }
+  defaultSystemData: any = []
+
+  // 系统部门管理员
+  deptFormList: any = {
+    id: null,
+    systemName: [],
+  }
+  defaultDeptData: any = []
 
   // 授权角色
   showFormList: any = {
     id: null,
     system: null,
-    roles: []
-  };
+    roles: [],
+  }
 
-  systemList: any = [];
+  systemList: any = []
 
   transferList: any = {
     data: [],
-    defaultdata: []
-  };
+    defaultdata: [],
+  }
 
   // 弹窗显示
-  editUserDialog = false;
-  showDeleteDialog = false;
-  showUserDialog = false;
-  showAdminDialog = false;
+  editUserDialog = false
+  showDeleteDialog = false
+  showUserDialog = false
+  showAdminDialog = false
+  showDeptDialog = false
 
   mounted() {
-    this.getDeptTree();
-    this.getSelectDeptSysAdminListByCurrentUser();
-    this.defaultForm = JSON.parse(JSON.stringify(this.userFormList));
+    this.getDeptTree()
+    this.getSelectDeptSysAdminListByCurrentUser()
+    this.defaultForm = JSON.parse(JSON.stringify(this.userFormList))
   }
 
   // 左边系统展示
   handleNavMenu(data: any) {
-    this.userList.deptId = data.id;
-    this.postUserList();
+    this.userList.deptId = data.id
+    this.postUserList()
   }
 
   // 搜索框
   handleSearch() {
-    this.postUserList();
+    this.postUserList()
   }
 
   // 添加按钮点击显示弹窗
   addUser() {
-    this.userFormName = "添加用户";
-    this.editUserDialog = !this.editUserDialog;
+    if (this.userList.deptId == null) {
+      this.$message({
+        message: '请选择部门',
+        type: 'warning',
+      })
+      return
+    }
+    this.userFormName = '添加用户'
+    this.editUserDialog = !this.editUserDialog
   }
 
   // 删除按钮点击显示弹窗
   deleteUser(arrId?: string[]) {
-    let id: any[] = [];
+    let id: any[] = []
     if (arrId) {
-      id = [arrId];
+      id = [arrId]
     } else {
       if (this.selectList.length === 0) {
         this.$message({
-          message: "请选择至少一名用户",
-          type: "warning"
-        });
-        return;
+          message: '请选择至少一名用户',
+          type: 'warning',
+        })
+        return
       }
       this.selectList.forEach((item: any) => {
-        id.push(item.id);
-      });
+        id.push(item.id)
+      })
     }
-    this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning"
+    this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     })
       .then(() => {
-        this.deleteUserBatch(id);
+        this.deleteUserBatch(id)
       })
       .catch(() => {
         this.$message({
-          type: "info",
-          message: "已取消删除"
-        });
-      });
+          type: 'info',
+          message: '已取消删除',
+        })
+      })
   }
 
   resetPassword() {
     if (this.selectList.length === 0) {
       this.$message({
-        message: "请选择至少一名用户",
-        type: "warning"
-      });
-      return;
+        message: '请选择至少一名用户',
+        type: 'warning',
+      })
+      return
     }
-    this.$confirm("是否重置密码?新密码为默认手机号后6位。", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning"
+    this.$confirm('是否重置密码?新密码为默认手机号后6位。', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     })
       .then(() => {
-        this.postResetPassword();
+        this.postResetPassword()
       })
       .catch(() => {
         this.$message({
-          type: "info",
-          message: "已取消删除"
-        });
-      });
-    // this.showAdminDialog = true;
+          type: 'info',
+          message: '已取消删除',
+        })
+      })
   }
 
   // 分页选择当前页
   handleSelectionChange(val: []) {
-    this.selectList = val;
+    this.selectList = val
+  }
+
+  // 每页显示多少
+  handleSizeChange(val: any) {
+    this.userList.length = val
   }
 
   // 分页选择
   currentChange(index: number) {
-    this.userList.pageIndex = index;
-    this.postUserList();
+    this.userList.pageIndex = index
+    this.postUserList()
   }
 
   // 添加/编辑按钮 关闭弹窗
   closeUserForm() {
-    this.userFormList = JSON.parse(JSON.stringify(this.defaultForm));
-    this.editUserDialog = false;
+    this.userFormList = JSON.parse(JSON.stringify(this.defaultForm))
+    this.editUserDialog = false
   }
 
   // 显示按钮 关闭弹窗
   closeShowForm() {
-    this.userFormList = JSON.parse(JSON.stringify(this.defaultForm));
-    this.showUserDialog = false;
+    this.userFormList = JSON.parse(JSON.stringify(this.defaultForm))
+    this.showUserDialog = false
   }
 
   // 添加/编辑用户验证
   validUser() {
-    (this.$refs.userForm as any).validate((valid: any) => {
+    ;(this.$refs.userForm as any).validate((valid: any) => {
       if (valid) {
         if (this.userFormList.id !== 0) {
-          this.putUserUpdate();
+          this.putUserUpdate()
         } else {
-          this.postUserAdd();
+          this.postUserAdd()
         }
       } else {
-        return false;
+        return false
       }
-    });
+    })
   }
 
   // 授权角色按钮
   handleUser(index: number) {
-    this.showFormList.id = index;
-    this.showUserDialog = true;
+    this.showFormList.id = index
+    this.showUserDialog = true
+  }
+
+  // 设置管理员
+  handleAdmin() {
+    this.showAdminDialog = true
   }
 
   // 接口调取
@@ -455,23 +460,21 @@ export default class user extends Vue {
   getDeptTree() {
     const params = {
       pageNum: 1,
-      pageSize: 1000
-    };
+      pageSize: 1000,
+    }
     getDeptTree(params).then((response: any) => {
-      const content = response.data.content;
-      this.navMenuData = content;
-      this.userList.deptId = content[0].id;
-      this.userFormList.deptId = content[0].id;
-      this.postUserList();
-    });
+      const content = response.data.content
+      this.navMenuData = content
+      this.userFormList.deptId = content[0].id
+    })
   }
   // 分页查询用户
   postUserList() {
-    const params = JSON.parse(JSON.stringify(this.userList));
-    params.id = Number(params.id);
+    const params = JSON.parse(JSON.stringify(this.userList))
+    params.id = Number(params.id)
     postUserList(params).then((response: any) => {
-      this.tableData = response.data;
-    });
+      this.tableData = response.data
+    })
   }
 
   // 授权角色
@@ -480,109 +483,177 @@ export default class user extends Vue {
       response.data.forEach((item: any) => {
         this.systemList.push({
           value: item.id,
-          label: item.systemName
-        });
-      });
-    });
+          label: item.systemName,
+        })
+      })
+    })
   }
 
   // 授权角色 选择部门
   getSelectRoleListByUserIdAndSysId(index: any) {
     const params = {
       sysId: index,
-      userId: this.showFormList.id
-    };
+      userId: this.showFormList.id,
+    }
     getSelectRoleListByUserIdAndSysId(params).then((response: any) => {
-      const data = response.data;
-      this.transferList.data = [];
-      this.transferList.defaultdata = [];
+      const data = response.data
+      this.transferList.data = []
+      this.transferList.defaultdata = []
       const allHaveList = response.data.haveList.concat(
         response.data.noHaveList
-      );
+      )
       data.haveList.forEach((item: any) => {
-        this.transferList.data.push(item.id);
-      });
+        this.transferList.data.push(item.id)
+      })
 
       allHaveList.forEach((item: any) => {
         this.transferList.defaultdata.push({
           key: item.id,
-          label: item.roleName
-        });
-      });
-    });
+          label: item.roleName,
+        })
+      })
+    })
   }
 
   // 编辑按钮 回显
   getUserDetail(id: number) {
-    this.userFormList.id = id;
+    this.userFormList.id = id
     getUserDetail(id).then((response: any) => {
-      Object.keys(this.userFormList).forEach(key => {
-        this.userFormList[key] = response.data[key];
-      });
-      this.userFormName = "编辑用户";
-      this.editUserDialog = true;
-    });
+      Object.keys(this.userFormList).forEach((key) => {
+        this.userFormList[key] = response.data[key]
+      })
+      this.userFormName = '编辑用户'
+      this.editUserDialog = true
+    })
   }
 
   // 添加用户提交
   postUserAdd() {
-    postUserAdd(this.userFormList).then((response: any) => {
-      this.postUserList();
-      this.closeUserForm();
-    });
+    const params = Object.assign(this.userFormList, {
+      deptId: this.userList.deptId,
+    })
+    postUserAdd(params).then((response: any) => {
+      this.postUserList()
+      this.closeUserForm()
+    })
   }
 
   // 编辑提交
   putUserUpdate() {
     putUserUpdate(this.userFormList).then((response: any) => {
-      this.postUserList();
-      this.closeUserForm();
-    });
+      this.postUserList()
+      this.closeUserForm()
+    })
   }
 
   // 删除列表
   deleteUserBatch(arrId: string[]) {
-    const id = arrId ? arrId : this.selectList;
+    const id = arrId ? arrId : this.selectList
     deleteUserBatch(id).then((response: any) => {
       this.$message({
-        type: "success",
-        message: "删除成功!"
-      });
-      this.postUserList();
-    });
+        type: 'success',
+        message: '删除成功!',
+      })
+      this.postUserList()
+    })
   }
 
   // 重置密码
   postResetPassword() {
-    const id: any = [];
+    const id: any = []
     this.selectList.forEach((item: any) => {
-      id.push(item.id);
-    });
+      id.push(item.id)
+    })
     postResetPassword(id).then((response: any) => {
       this.$message({
-        type: "success",
-        message: "重置成功!"
-      });
-      this.postUserList();
-    });
+        type: 'success',
+        message: '重置成功!',
+      })
+      this.postUserList()
+    })
   }
 
   // 授权提交
   postUserRoles() {
     const params = {
       roleIds: this.transferList.data,
-      userId: this.showFormList.id
-    };
+      userId: this.showFormList.id,
+    }
     postUserRoles(params).then((response: any) => {
-      this.postUserList();
-      this.showUserDialog = false;
-    });
+      this.postUserList()
+      this.showUserDialog = false
+    })
+  }
+
+  // 选择子部门
+  getSelectSysAdminListByCurrentUserForAllocationDeptSysAdmin(id: Number) {
+    this.deptFormList.id = id
+    this.deptFormList.systemName = []
+    getSelectSysAdminListByCurrentUserForAllocationDeptSysAdmin({
+      userId: id,
+    }).then((response: any) => {
+      const defaultDeptData: any = []
+      response.data.forEach((element: any) => {
+        if (element.checked) {
+          this.deptFormList.systemName.push(element.id)
+        }
+        defaultDeptData.push({
+          value: element.id,
+          label: element.systemName,
+        })
+      })
+      this.defaultDeptData = defaultDeptData
+      this.showDeptDialog = true
+    })
+  }
+
+  // 选择子部门确认
+  getAllocationDeptSysAdmin() {
+    const data = {
+      userIdList: [this.deptFormList.id],
+      systemIdList: this.deptFormList.systemName,
+    }
+    getAllocationDeptSysAdmin(data).then((response: any) => {
+      this.showDeptDialog = false
+    })
+  }
+
+  // 选择子系统
+  getSelectSysAdminListByCurrentUserForAllocationSysAdmin(id: Number) {
+    this.systemFormList.id = id
+    this.systemFormList.systemName = []
+    getSelectSysAdminListByCurrentUserForAllocationSysAdmin({
+      userId: id,
+    }).then((response: any) => {
+      this.defaultSystemData = []
+      response.data.forEach((element: any) => {
+        if (element.checked) {
+          this.systemFormList.systemName.push(element.id)
+        }
+        this.defaultSystemData.push({
+          value: element.id,
+          label: element.systemName,
+        })
+      })
+      this.showAdminDialog = true
+    })
+  }
+
+  // 选择子系统确认
+  getAllocationSysAdmin() {
+    const data = {
+      userIdList: [this.systemFormList.id],
+      systemIdList: this.systemFormList.systemName,
+    }
+    getAllocationDeptSysAdmin(data).then((response: any) => {
+      this.showAdminDialog = false
+    })
   }
 }
 </script>
 <style lang="scss" scoped>
-@import "@/styles/functions.scss";
-@import "@/styles/mixins.scss";
+@import '@/styles/functions.scss';
+@import '@/styles/mixins.scss';
 
 .user {
   background: white;
