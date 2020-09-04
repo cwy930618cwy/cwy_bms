@@ -338,7 +338,11 @@ export default class limit extends Vue {
     const params = JSON.parse(JSON.stringify(this.limitList))
     params.id = Number(params.id)
     getPermissionList(params).then((response: any) => {
-      this.tableData = response.data
+      const tableData = response.data
+      tableData.content.forEach((element: any) => {
+        element.enabled = !!element.enabled
+      })
+      this.tableData = tableData
     })
   }
 
@@ -357,6 +361,8 @@ export default class limit extends Vue {
 
   // 添加权限提交
   postPermissionAdd() {
+    this.limitFormList.relSystemId = this.limitList.relSystemId
+    this.limitFormList.parentId = this.limitList.parentId
     postPermissionAdd(this.limitFormList).then((response: any) => {
       this.getPermissionList()
       this.closeLimitForm()
@@ -365,6 +371,8 @@ export default class limit extends Vue {
 
   // 编辑提交
   postPermissionUpdate() {
+    this.limitFormList.relSystemId = this.limitList.relSystemId
+    this.limitFormList.parentId = this.limitList.parentId
     postPermissionUpdate(this.limitFormList).then((response: any) => {
       this.getPermissionList()
       this.closeLimitForm()
