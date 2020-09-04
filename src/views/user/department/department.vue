@@ -268,27 +268,23 @@ export default class department extends Vue {
     })
   }
 
-  // 记录树节点
-  async recordTree() {
-    await this.getDeptTree()
-    if (!!this.departmentList.parentId) {
-      this.$nextTick(() => {
-        console.log(this.$refs.treeRef)
-        ;(this.$refs.treeRef as any).setCurrentKey(this.departmentList.parentId)
-      })
-    }
-  }
-
   // 接口调取
   // 分页查询部门树
-  async getDeptTree() {
+  getDeptTree() {
     const params = {
       pageNum: 1,
       pageSize: 1000,
     }
-    const response = await getDeptTree(params)
-    const content = response.data.content
-    this.navMenuData = content
+    getDeptTree(params).then((response: any) => {
+      const content = response.data.content
+      this.navMenuData = content
+      if (!!this.departmentList.parentId) {
+        this.$nextTick(() => {
+          console.log(this.$refs.treeRef)
+          ;(this.$refs.treeRef as any).setCurrentKey(5)
+        })
+      }
+    })
   }
   // 分页查询部门
   postDepartmentList() {
@@ -329,14 +325,15 @@ export default class department extends Vue {
   }
 
   // 添加部门提交
-  async postDepartmentAdd() {
+  postDepartmentAdd() {
     const params = Object.assign(this.departmentFormList, {
       parentId: this.departmentList.parentId,
     })
-    await postDeptAdd(params)
-    this.postDepartmentList()
-    this.closeDepartmentForm()
-    this.recordTree()
+    postDeptAdd(params).then((response: any) => {
+      this.postDepartmentList()
+      this.closeDepartmentForm()
+      this.getDeptTree()
+    })
   }
 
   // 编辑提交
