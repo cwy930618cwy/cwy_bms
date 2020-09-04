@@ -1,14 +1,12 @@
 <template>
   <div class="content">
     <div class="components_search">
-      <el-input placeholder="id" v-model="systemList.id" clearable></el-input>
       <el-input placeholder="系统标识" v-model="systemList.systemCode" clearable></el-input>
       <el-input placeholder="系统名称" v-model="systemList.systemName" clearable></el-input>
       <el-button @click="handleSearch">搜索</el-button>
     </div>
     <div class="components_handleList">
       <el-button type="primary" @click="addSystem">添加</el-button>
-      <el-button type="danger" @click="deleteSystem()">删除</el-button>
     </div>
 
     <el-table
@@ -20,15 +18,23 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column align="center" type="selection"></el-table-column>
-      <el-table-column prop="id" align="center" label="ID"></el-table-column>
       <el-table-column prop="systemCode" align="center" label="系统标识"></el-table-column>
       <el-table-column prop="systemName" align="center" label="系统名称"></el-table-column>
       <el-table-column prop="loginCallbackUrl" align="center" label="回调地址"></el-table-column>
+      <el-table-column prop="enabled" align="center" label="启用状态">
+        <template slot-scope="scope">
+          <el-switch
+            :value="scope.row.enabled"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            @change="changeSourcePublice(scope.row)"
+          ></el-switch>
+        </template>
+      </el-table-column>
       <el-table-column prop="remark" align="center" label="备注"></el-table-column>
       <el-table-column fixed="right" align="center" label="操作">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="getSystemDetail(scope.row.id)">编辑子系统</el-button>
-          <el-button type="danger" size="mini" @click="deleteSystem(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -83,6 +89,8 @@ import {
   postSystemAdd,
   postSystemUpdate,
   postSystemDelete,
+  postDoEnable,
+  postDoDeactivate,
 } from '@/api/childSystem'
 
 @Component({
@@ -146,43 +154,6 @@ export default class system extends Vue {
     this.showAddDialog = !this.showAddDialog
   }
 
-  // 删除按钮点击显示弹窗
-  deleteSystem(arrId?: string[]) {
-    let id: any[] = []
-    if (arrId) {
-      id = [arrId]
-    } else {
-      if (this.selectList.length === 0) {
-        this.$message({
-          message: '请选择至少一名用户',
-          type: 'warning',
-        })
-        return
-      }
-      this.selectList.forEach((item: any) => {
-        id.push(item.id)
-      })
-    }
-    this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-      .then(() => {
-        this.postSystemDelete(id)
-        this.$message({
-          type: 'success',
-          message: '删除成功!',
-        })
-      })
-      .catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消删除',
-        })
-      })
-  }
-
   // 分页选择当前页
   handleSelectionChange(val: []) {
     this.selectList = val
@@ -226,7 +197,11 @@ export default class system extends Vue {
     const params = JSON.parse(JSON.stringify(this.systemList))
     params.id = Number(params.id)
     getSystemList(params).then((response: any) => {
-      this.tableData = response.data
+      const tableData = response.data
+      tableData.content.forEach((element: any) => {
+        element.enabled = !!element.enabled
+      })
+      this.tableData = tableData
     })
   }
 
@@ -258,16 +233,18 @@ export default class system extends Vue {
     })
   }
 
-  // 删除列表
-  postSystemDelete(arrId: string[]) {
-    const id = arrId ? arrId : this.selectList
-    postSystemDelete(id).then((response: any) => {
-      this.$message({
-        type: 'success',
-        message: '删除成功!',
+  // 发布状态
+  changeSourcePublice(item: any) {
+    console.log('changeSourcePublice---', item)
+    if (item.enabled) {
+      postDoDeactivate([item.id]).then((response: any) => {
+        this.getSystemList()
       })
-      this.getSystemList()
-    })
+    } else {
+      postDoEnable([item.id]).then((response: any) => {
+        this.getSystemList()
+      })
+    }
   }
 }
 </script>

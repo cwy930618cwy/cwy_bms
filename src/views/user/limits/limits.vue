@@ -1,10 +1,9 @@
 <template>
   <div class="content">
     <div class="components_search">
-      <el-input placeholder="id" v-model="limitList.id" clearable></el-input>
       <el-input placeholder="权限名称" v-model="limitList.name" clearable></el-input>
       <el-input placeholder="权限标识" v-model="limitList.value" clearable></el-input>
-      <el-select v-model="limitList.relSystemId" placeholder="请选择所属系统">
+      <el-select v-model="limitList.relSystemId" @change="handleSystem" placeholder="请选择所属系统">
         <el-option
           v-for="(item, index) in systemList"
           :key="index"
@@ -19,26 +18,49 @@
       <el-button type="danger" @click="deleteLimit()">删除</el-button>
     </div>
 
-    <el-table
-      :data="tableData.content"
-      tooltip-effect="dark"
-      style="width: 100%"
-      row-key="id"
-      :header-cell-style="{ background: '#eef1f6', color: '#606266' }"
-      @selection-change="handleSelectionChange"
-    >
-      <el-table-column align="center" type="selection"></el-table-column>
-      <el-table-column prop="id" align="center" label="ID"></el-table-column>
-      <el-table-column prop="name" align="center" label="权限名称"></el-table-column>
-      <el-table-column prop="value" align="center" label="权限值"></el-table-column>
-      <el-table-column prop="remark" align="center" label="备注"></el-table-column>
-      <el-table-column fixed="right" align="center" label="操作">
-        <template slot-scope="scope">
-          <el-button type="primary" size="mini" @click="getPermissionDetail(scope.row.id)">编辑</el-button>
-          <el-button type="danger" size="mini" @click="deleteLimit(scope.row.id)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div class="contain">
+      <div class="left">
+        <el-tree
+          node-key="id"
+          ref="treeRef"
+          :data="navMenuData"
+          highlight-current
+          :props="navMenuProp"
+          @node-click="handleNavMenu"
+        ></el-tree>
+      </div>
+      <div class="right">
+        <el-table
+          :data="tableData.content"
+          tooltip-effect="dark"
+          style="width: 100%"
+          row-key="id"
+          :header-cell-style="{ background: '#eef1f6', color: '#606266' }"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column align="center" type="selection"></el-table-column>
+          <el-table-column prop="name" align="center" label="权限名称"></el-table-column>
+          <el-table-column prop="value" align="center" label="权限值"></el-table-column>
+          <el-table-column prop="enabled" align="center" label="启用状态">
+            <template slot-scope="scope">
+              <el-switch
+                :value="scope.row.enabled"
+                active-color="#13ce66"
+                inactive-color="#ff4949"
+                @change="changeSourcePublice(scope.row)"
+              ></el-switch>
+            </template>
+          </el-table-column>
+          <el-table-column prop="remark" align="center" label="备注"></el-table-column>
+          <el-table-column fixed="right" align="center" label="操作">
+            <template slot-scope="scope">
+              <el-button type="primary" size="mini" @click="getPermissionDetail(scope.row.id)">编辑</el-button>
+              <el-button type="danger" size="mini" @click="deleteLimit(scope.row.id)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
 
     <div class="pagination-container">
       <el-pagination
@@ -60,29 +82,17 @@
     >
       <div class="tableList">
         <el-form ref="addForm" :model="limitFormList" :rules="rules" label-width="80px">
-          <el-form-item label="所属系统" prop="relSystemId">
-            <el-select v-model="limitFormList.relSystemId" placeholder="所属系统">
-              <el-option
-                v-for="(item, index) in systemList"
-                :key="index"
-                :label="item.label"
-                :value="item.value"
-              ></el-option>
-            </el-select>
+          <el-form-item label="所属系统">
+            <span>{{limitList.relSystemName}}</span>
           </el-form-item>
           <el-form-item label="权限名称" prop="name">
             <el-input placeholder="请输入权限名称" v-model="limitFormList.name"></el-input>
           </el-form-item>
-          <el-form-item label="父级权限" prop="parentId">
-            <el-tree
-              ref="treeRef"
-              :data="treeData.data"
-              :props="treeData.defaultProps"
-              highlight-current
-              node-key="id"
-              default-expand-all
-              @node-click="nodeClick"
-            ></el-tree>
+          <el-form-item label="权限值" prop="value">
+            <el-input placeholder="请输入权限值" v-model="limitFormList.value"></el-input>
+          </el-form-item>
+          <el-form-item label="父级权限">
+            <span>{{limitList.parentName}}</span>
           </el-form-item>
           <el-form-item label="权限类型" prop="type">
             <el-radio-group v-model="limitFormList.type">
@@ -93,8 +103,8 @@
               >{{ item.name }}</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="前端路径" prop="url">
-            <el-input placeholder="请输入前端路径" v-model="limitFormList.url"></el-input>
+          <el-form-item label="前端路径" prop="uri">
+            <el-input placeholder="请输入前端路径" v-model="limitFormList.uri"></el-input>
           </el-form-item>
           <el-form-item label="图标" prop="icon">
             <el-input placeholder="请输入图标" v-model="limitFormList.icon"></el-input>
@@ -113,15 +123,18 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
-import { getDeptTree } from '@/api/department'
 import {
   getPermissionList,
   getPermissionDetail,
   postPermissionAdd,
   postPermissionUpdate,
   postPermissionDelete,
+  getSelectPermissionTreeBySubSysId,
+  postDoEnable,
+  postDoDeactivate,
 } from '@/api/limit'
 import { getSelectSysAdminListByCurrentUser } from '@/api/character'
+import { getSelectPermissionByRoleId } from '@/api/character'
 
 @Component({
   components: {},
@@ -129,16 +142,19 @@ import { getSelectSysAdminListByCurrentUser } from '@/api/character'
 export default class limit extends Vue {
   // 搜索
   systemList: any = []
-  // 树形控件
-  treeData = {
-    data: [],
-    defaultProps: {
-      children: 'deptVOS',
-      label: 'deptName',
+  // 部门树侧边栏
+  navMenuData: any = [
+    {
+      name: '根',
+      children: [],
     },
+  ]
+  navMenuProp = {
+    children: 'children',
+    label: 'name',
   }
   // table列表
-  limitList = {
+  limitList: any = {
     pageIndex: 1,
     length: 1000,
     name: '',
@@ -150,29 +166,25 @@ export default class limit extends Vue {
   tableData: any = {}
 
   selectList = []
-  limitFormName = '添加子系统'
+  limitFormName = '添加权限'
 
   // form列表
   limitFormList: any = {
     id: -1,
-    relSystemId: '',
     name: '',
-    parentId: [],
+    value: '',
     type: '',
-    url: '',
+    uri: '',
     icon: '',
     remark: '',
   }
   defaultForm: any = {}
 
   rules = {
-    relSystemId: [
-      { required: true, message: '请输入所属系统', trigger: 'blur' },
-    ],
     name: [{ required: true, message: '请输入权限名称', trigger: 'blur' }],
-    parentId: [{ required: true, message: '请输入父级权限', trigger: 'blur' }],
+    value: [{ required: true, message: '请输入权限值', trigger: 'blur' }],
     type: [{ required: true, message: '请输入权限类型', trigger: 'blur' }],
-    url: [{ required: true, message: '请输入前端路径', trigger: 'blur' }],
+    uri: [{ required: true, message: '请输入前端路径', trigger: 'blur' }],
     icon: [{ required: true, message: '请输入图标', trigger: 'blur' }],
     remark: [{ required: true, message: '请输入备注', trigger: 'blur' }],
   }
@@ -198,19 +210,41 @@ export default class limit extends Vue {
 
   mounted() {
     this.getSelectSysAdminListByCurrentUser()
-    this.getDeptTree()
     this.defaultForm = JSON.parse(JSON.stringify(this.limitFormList))
+  }
+
+  // 切换系统
+  handleSystem(id: number) {
+    this.limitList.relSystemName = this.systemList.find(
+      (item: any) => item.value == id
+    ).label
   }
 
   // 搜索框
   handleSearch() {
-    this.getPermissionList()
+    this.getSelectPermissionTreeBySubSysId(this.limitList.relSystemId)
+  }
+
+  // 左边系统展示
+  handleNavMenu(data: any) {
+    this.limitList.parentName = data.name
+    this.limitList.parentId = data.id
+    if (!!this.limitList.relSystemId) {
+      this.getPermissionList()
+    }
   }
 
   // 添加按钮点击显示弹窗
   addLimit() {
-    this.limitFormName = '添加子系统'
-    this.showAddDialog = !this.showAddDialog
+    if (this.limitList.parentId >= 0) {
+      this.limitFormName = '添加权限'
+      this.showAddDialog = !this.showAddDialog
+    } else {
+      this.$message({
+        message: '请选择部门',
+        type: 'warning',
+      })
+    }
   }
 
   // 删除按钮点击显示弹窗
@@ -287,10 +321,6 @@ export default class limit extends Vue {
     })
   }
 
-  nodeClick(item: { id: any }) {
-    this.limitFormList.parentId = item.id
-  }
-
   // 接口调取
   // 获取权限列表
   getSelectSysAdminListByCurrentUser() {
@@ -320,16 +350,8 @@ export default class limit extends Vue {
       Object.keys(this.limitFormList).forEach((key) => {
         this.limitFormList[key] = response.data[key]
       })
-      this.limitFormName = '编辑子系统'
+      this.limitFormName = '编辑权限'
       this.showAddDialog = true
-      if (!!response.data.parentId) {
-        this.$nextTick(() => {
-          console.log(this.$refs.treeRef)
-          ;(this.$refs.treeRef as any).setCurrentKey(
-            this.limitFormList.parentId
-          )
-        })
-      }
     })
   }
 
@@ -361,16 +383,24 @@ export default class limit extends Vue {
     })
   }
 
-  // 分页查询部门树
-  getDeptTree() {
-    const params = {
-      pageNum: 1,
-      pageSize: 1000,
-    }
-    getDeptTree(params).then((response: any) => {
-      const content = response.data.content
-      this.treeData.data = content
+  // 添加根据系统id获取权限树
+  getSelectPermissionTreeBySubSysId(id: any) {
+    getSelectPermissionTreeBySubSysId({ id: id }).then((response: any) => {
+      this.navMenuData[0].children = response.data
     })
+  }
+
+  // 发布状态
+  changeSourcePublice(item: any) {
+    if (item.enabled) {
+      postDoDeactivate([item.id]).then((response: any) => {
+        this.getPermissionList()
+      })
+    } else {
+      postDoEnable([item.id]).then((response: any) => {
+        this.getPermissionList()
+      })
+    }
   }
 }
 </script>

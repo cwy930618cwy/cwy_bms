@@ -123,7 +123,12 @@ import {
 })
 export default class department extends Vue {
   // 部门树侧边栏
-  navMenuData = []
+  navMenuData: any = [
+    {
+      deptName: '根',
+      deptVOS: [],
+    },
+  ]
   navMenuProp = {
     children: 'deptVOS',
     label: 'deptName',
@@ -276,12 +281,12 @@ export default class department extends Vue {
       pageSize: 1000,
     }
     getDeptTree(params).then((response: any) => {
-      const content = response.data.content
-      this.navMenuData = content
+      this.navMenuData[0].deptVOS = response.data.content
       if (!!this.departmentList.parentId) {
         this.$nextTick(() => {
-          console.log(this.$refs.treeRef)
-          ;(this.$refs.treeRef as any).setCurrentKey(5)
+          ;(this.$refs.treeRef as any).setCurrentKey(
+            this.departmentList.parentId
+          )
         })
       }
     })
@@ -297,7 +302,6 @@ export default class department extends Vue {
         return
       }
       this.tableData = response.data
-      console.log('this.tableData---', this.tableData)
     })
   }
 

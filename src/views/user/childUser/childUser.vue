@@ -220,11 +220,17 @@ import {
 })
 export default class user extends Vue {
   // 用户树侧边栏
-  navMenuData = []
+  navMenuData: any = [
+    {
+      deptName: '根',
+      deptVOS: [],
+    },
+  ]
   navMenuProp = {
     children: 'deptVOS',
     label: 'deptName',
   }
+
   // table列表
   userList: any = {
     pageIndex: 1,
@@ -464,7 +470,7 @@ export default class user extends Vue {
     }
     getDeptTree(params).then((response: any) => {
       const content = response.data.content
-      this.navMenuData = content
+      this.navMenuData[0].deptVOS = content
       this.userFormList.deptId = content[0].id
     })
   }

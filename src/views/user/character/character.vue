@@ -1,7 +1,6 @@
 <template>
   <div class="content">
     <div class="components_search">
-      <el-input placeholder="id" v-model="characterList.id" clearable></el-input>
       <el-input placeholder="角色名称" v-model="characterList.roleName" clearable></el-input>
       <el-select v-model="characterList.relSystemId" placeholder="请选择所属系统">
         <el-option
@@ -27,7 +26,6 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column align="center" type="selection"></el-table-column>
-      <el-table-column prop="id" align="center" label="ID"></el-table-column>
       <el-table-column prop="characterCode" align="center" label="角色标识"></el-table-column>
       <el-table-column prop="roleName" align="center" label="角色名称"></el-table-column>
       <el-table-column prop="loginCallbackUrl" align="center" label="回调地址"></el-table-column>

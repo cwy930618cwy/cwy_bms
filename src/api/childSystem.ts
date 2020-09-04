@@ -53,3 +53,21 @@ export function postAllocationSysAdmin(data: any) {
     data
   });
 }
+
+// 启用子系统
+export function postDoEnable(data: any) {
+  return request({
+    url: "/uc/ucSubSystem/doEnable",
+    method: "post",
+    data
+  });
+}
+
+// 禁用子系统
+export function postDoDeactivate(data: any) {
+  return request({
+    url: "/uc/ucSubSystem/doDeactivate",
+    method: "post",
+    data
+  });
+}
