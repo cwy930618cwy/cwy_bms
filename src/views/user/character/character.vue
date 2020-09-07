@@ -121,7 +121,7 @@ import {
   postRoleDelete,
   getSelectPermissionByRoleId,
   getAddUcRolePermissionRelation,
-  getSelectSysAdminListByCurrentUser,
+  getSelectAllSysListByCurrentUser,
 } from '@/api/character'
 
 import { getPermissionDetail } from '@/api/limit'
@@ -176,7 +176,7 @@ export default class character extends Vue {
 
   mounted() {
     this.getDeptTree()
-    this.getSelectSysAdminListByCurrentUser()
+    this.getSelectAllSysListByCurrentUser()
     this.defaultForm = JSON.parse(JSON.stringify(this.characterFormList))
   }
 
@@ -267,8 +267,8 @@ export default class character extends Vue {
 
   // 接口调取
   // 获取角色列表
-  getSelectSysAdminListByCurrentUser() {
-    getSelectSysAdminListByCurrentUser().then((response: any) => {
+  getSelectAllSysListByCurrentUser() {
+    getSelectAllSysListByCurrentUser().then((response: any) => {
       response.data.forEach((item: any) => {
         this.systemList.push({
           value: item.id,

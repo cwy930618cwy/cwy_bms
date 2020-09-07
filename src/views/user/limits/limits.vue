@@ -129,12 +129,14 @@ import {
   postPermissionAdd,
   postPermissionUpdate,
   postPermissionDelete,
-  getSelectPermissionTreeBySubSysId,
+  getSelectAllPermissionTreeBySubSysId,
   postDoEnable,
   postDoDeactivate,
 } from '@/api/limit'
-import { getSelectSysAdminListByCurrentUser } from '@/api/character'
-import { getSelectPermissionByRoleId } from '@/api/character'
+import {
+  getSelectPermissionByRoleId,
+  getSelectAllSysListByCurrentUser,
+} from '@/api/character'
 
 @Component({
   components: {},
@@ -209,7 +211,7 @@ export default class limit extends Vue {
   showDeleteDialog = false
 
   mounted() {
-    this.getSelectSysAdminListByCurrentUser()
+    this.getSelectAllSysListByCurrentUser()
     this.defaultForm = JSON.parse(JSON.stringify(this.limitFormList))
   }
 
@@ -222,7 +224,7 @@ export default class limit extends Vue {
 
   // 搜索框
   handleSearch() {
-    this.getSelectPermissionTreeBySubSysId(this.limitList.relSystemId)
+    this.getSelectAllPermissionTreeBySubSysId(this.limitList.relSystemId)
   }
 
   // 左边系统展示
@@ -323,8 +325,8 @@ export default class limit extends Vue {
 
   // 接口调取
   // 获取权限列表
-  getSelectSysAdminListByCurrentUser() {
-    getSelectSysAdminListByCurrentUser().then((response: any) => {
+  getSelectAllSysListByCurrentUser() {
+    getSelectAllSysListByCurrentUser().then((response: any) => {
       response.data.forEach((item: any) => {
         this.systemList.push({
           value: item.id,
@@ -392,8 +394,8 @@ export default class limit extends Vue {
   }
 
   // 添加根据系统id获取权限树
-  getSelectPermissionTreeBySubSysId(id: any) {
-    getSelectPermissionTreeBySubSysId({ id: id }).then((response: any) => {
+  getSelectAllPermissionTreeBySubSysId(id: any) {
+    getSelectAllPermissionTreeBySubSysId({ id: id }).then((response: any) => {
       this.navMenuData[0].children = response.data
     })
   }

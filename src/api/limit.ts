@@ -45,10 +45,10 @@ export function postPermissionDelete(data: any) {
   });
 }
 
-// 批量删除角色
-export function getSelectPermissionTreeBySubSysId(data: any) {
+// 查找权限树
+export function getSelectAllPermissionTreeBySubSysId(data: any) {
   return request({
-    url: "/uc/ucPermission/selectPermissionTreeBySubSysId",
+    url: "/uc/ucPermission/selectAllPermissionTreeBySubSysId",
     method: "get",
     params: data
   });
