@@ -82,7 +82,6 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
-import System from './components/System.vue'
 import {
   getSystemList,
   getSystemDetail,
@@ -94,7 +93,7 @@ import {
 } from '@/api/childSystem'
 
 @Component({
-  components: { System },
+  components: {},
 })
 export default class system extends Vue {
   // table列表

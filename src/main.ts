@@ -1,6 +1,6 @@
 import Vue from "vue";
 
-import Cookies from "js-cookie";
+import VueClipboard from "vue-clipboard2";
 
 import "normalize.css/normalize.css"; // a modern alternative to CSS resets
 
@@ -30,6 +30,7 @@ import "./permission.ts"; // permission control
 // }
 
 Vue.use(Element);
+Vue.use(VueClipboard);
 
 Vue.config.productionTip = false;
 

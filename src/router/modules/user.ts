@@ -8,7 +8,7 @@ const tableRouter = {
   redirect: "/user/department",
   name: "user",
   meta: {
-    title: "用户",
+    title: "用户中台",
     icon: "table"
   },
   children: [
