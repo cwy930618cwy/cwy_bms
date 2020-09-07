@@ -3,7 +3,7 @@
     <div class="components_search">
       <el-input
         placeholder="应用名称"
-        v-model="applyList.applyName"
+        v-model="applyList.appName"
         clearable
       ></el-input>
       <el-button @click="handleSearch">搜索</el-button>
@@ -23,37 +23,37 @@
     >
       <el-table-column align="center" type="selection"></el-table-column>
       <el-table-column
-        prop="applyName"
+        prop="appName"
         align="center"
         label="应用名称"
       ></el-table-column>
       <el-table-column
-        prop="applyDetail"
+        prop="appDescription"
         align="center"
         label="应用描述"
       ></el-table-column>
-      <el-table-column prop="applyPublich" align="center" label="应用公钥">
+      <el-table-column prop="appPublicKey" align="center" label="应用公钥">
         <template slot-scope="scope">
           <el-button
             type="primary"
             size="mini"
-            @click="handleKey('公钥', scope.row.applyPublich)"
+            @click="handleKey('公钥', scope.row.appPublicKey)"
             >查看</el-button
           >
         </template>
       </el-table-column>
-      <el-table-column prop="applyPrivate" align="center" label="应用私钥">
+      <el-table-column prop="appPrivateKey" align="center" label="应用私钥">
         <template slot-scope="scope">
           <el-button
             type="primary"
             size="mini"
-            @click="handleKey('私钥', scope.row.applyPrivate)"
+            @click="handleKey('私钥', scope.row.appPrivateKey)"
             >查看</el-button
           >
         </template>
       </el-table-column>
       <el-table-column
-        prop="applyCreateTime"
+        prop="gmtCreate"
         align="center"
         label="创建时间"
       ></el-table-column>
@@ -62,7 +62,7 @@
           <el-button
             type="primary"
             size="mini"
-            @click="getApplyDetail(scope.row.id)"
+            @click="getApplyDetail(scope.row.bzId)"
             >详情</el-button
           >
         </template>
@@ -75,7 +75,7 @@
         @current-change="currentChange"
         :page-sizes="[10, 20, 30, 50]"
         layout="sizes, prev, pager, next, jumper"
-        :total="tableData.total"
+        :totalElements="tableData.totalElements"
         @size-change="handleSizeChange"
       ></el-pagination>
     </div>
@@ -94,16 +94,16 @@
           :rules="rules"
           label-width="80px"
         >
-          <el-form-item label="应用名称" prop="applyName">
+          <el-form-item label="应用名称" prop="appName">
             <el-input
               placeholder="请输入应用名称"
-              v-model="applyFormList.applyName"
+              v-model="applyFormList.appName"
             ></el-input>
           </el-form-item>
-          <el-form-item label="应用描述" prop="applyDetail">
+          <el-form-item label="应用描述" prop="appDescription">
             <el-input
               placeholder="请输入应用描述"
-              v-model="applyFormList.applyDetail"
+              v-model="applyFormList.appDescription"
             ></el-input>
           </el-form-item>
         </el-form>
@@ -127,36 +127,36 @@
         :rules="detailRules"
         label-width="80px"
       >
-        <el-form-item label="应用名称" prop="applyName">
+        <el-form-item label="应用名称" prop="appName">
           <el-input
             placeholder="请输入应用名称"
-            v-model="applyDatailFormList.applyName"
+            v-model="applyDatailFormList.appName"
           ></el-input>
         </el-form-item>
-        <el-form-item label="应用描述" prop="applyDetail">
+        <el-form-item label="应用描述" prop="appDescription">
           <el-input
             placeholder="请输入应用描述"
-            v-model="applyDatailFormList.applyDetail"
+            v-model="applyDatailFormList.appDescription"
           ></el-input>
         </el-form-item>
-        <el-form-item label="创建时间" prop="createTime">
-          <span>{{ applyDatailFormList.createTime }}</span>
+        <el-form-item label="创建时间" prop="gmtCreate">
+          <span>{{ applyDatailFormList.gmtCreate }}</span>
         </el-form-item>
-        <el-form-item label="修改时间" prop="modifyTime">
-          <span>{{ applyDatailFormList.modifyTime }}</span>
+        <el-form-item label="修改时间" prop="gmtModified">
+          <span>{{ applyDatailFormList.gmtModified }}</span>
         </el-form-item>
-        <el-form-item label="公钥" prop="publicKey">
+        <el-form-item label="公钥" prop="appPublicKey">
           <el-input
             type="textarea"
             placeholder="请输入公钥"
-            v-model="applyDatailFormList.publicKey"
+            v-model="applyDatailFormList.appPublicKey"
           ></el-input>
         </el-form-item>
-        <el-form-item label="私钥" prop="publicKey">
+        <el-form-item label="私钥" prop="appPrivateKey">
           <el-input
             type="textarea"
             placeholder="请输入私钥"
-            v-model="applyDatailFormList.praviteKey"
+            v-model="applyDatailFormList.appPrivateKey"
           ></el-input>
         </el-form-item>
       </el-form>
@@ -184,15 +184,13 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
-// import {
-//   getApplyList,
-//   getApplyDetail,
-//   postApplyAdd,
-//   postApplyUpdate,
-//   postApplyDelete,
-//   postDoEnable,
-//   postDoDeactivate,
-// } from '@/api/childApply'
+import {
+  getApplyList,
+  getApplicationDetail,
+  postApplicationAdd,
+  postApplicationUpdate,
+  postApplicationDelete
+} from "@/api/apply";
 
 @Component({
   components: {}
@@ -202,8 +200,7 @@ export default class apply extends Vue {
   applyList = {
     pageIndex: 1,
     length: 10,
-    applyName: "",
-    id: null
+    appName: ""
   };
 
   tableData: any = {};
@@ -219,36 +216,36 @@ export default class apply extends Vue {
   // form列表
   applyFormList: any = {
     id: -1,
-    applyName: "",
-    applyDetail: ""
+    appName: "",
+    appDescription: ""
   };
   defaultForm: any = {};
 
   rules = {
-    applyName: [{ required: true, message: "请输入应用名称", trigger: "blur" }],
-    applyDetail: [
+    appName: [{ required: true, message: "请输入应用名称", trigger: "blur" }],
+    appDescription: [
       { required: true, message: "请输入应用描述", trigger: "blur" }
     ]
   };
 
   applyDatailFormList: any = {
     id: -1,
-    applyName: "",
-    applyDetail: "",
-    createTime: "1022",
-    modifyTime: "011",
-    publicKey: "111",
-    praviteKey: "222"
+    appName: "",
+    appDescription: "",
+    gmtCreate: "1022",
+    gmtModified: "011",
+    appPublicKey: "111",
+    appPrivateKey: "222"
   };
   defaultDetailForm: any = {};
 
   detailRules = {
-    applyName: [{ required: true, message: "请输入应用名称", trigger: "blur" }],
-    applyDetail: [
+    appName: [{ required: true, message: "请输入应用名称", trigger: "blur" }],
+    appDescription: [
       { required: true, message: "请输入应用描述", trigger: "blur" }
     ],
-    publicKey: [{ required: true, message: "请输入公钥", trigger: "blur" }],
-    praviteKey: [{ required: true, message: "请输入私钥", trigger: "blur" }]
+    appPublicKey: [{ required: true, message: "请输入公钥", trigger: "blur" }],
+    appPrivateKey: [{ required: true, message: "请输入私钥", trigger: "blur" }]
   };
 
   // 弹窗显示
@@ -386,76 +383,49 @@ export default class apply extends Vue {
   // 接口调取
   // 分页查询部门
   getApplyList() {
-    const params = JSON.parse(JSON.stringify(this.applyList));
-    params.id = Number(params.id);
-    console.log("分页查询部门----");
-
-    this.tableData = {
-      content: [
-        {
-          applyName: "111",
-          applyPublich: "siyao",
-          applyPrivate: "gpngyap"
-        }
-      ],
-      total: 100
-    };
-
-    // getApplyList(params).then((response: any) => {
-    //   const tableData = response.data
-    //   tableData.content.forEach((element: any) => {
-    //     element.enabled = !!element.enabled
-    //   })
-    //   this.tableData = tableData
-    // })
+    const params = this.applyList;
+    getApplyList(params).then((response: any) => {
+      console.log("nimade---", response.data);
+      this.tableData = response.data;
+    });
   }
 
   // 编辑按钮 回显
   getApplyDetail(id: number) {
     this.applyFormList.id = id;
-    console.log("编辑按钮 回显----");
+    console.log("编辑按钮 回显----", id);
 
-    this.showDetailDialog = true;
-    // getApplyDetail({ id: id }).then((response: any) => {
-    //   Object.keys(this.applyFormList).forEach((key) => {
-    //     this.applyFormList[key] = response.data[key]
-    //   })
-    //   this.showAddDialog = true
-    // })
+    getApplicationDetail({ bzId: id }).then((response: any) => {
+      this.showAddDialog = true;
+    });
   }
 
   // 添加部门提交
   postApplyAdd() {
-    console.log("添加部门提交---");
-
-    // postApplyAdd(this.applyFormList).then((response: any) => {
-    //   this.getApplyList()
-    //   this.closeApplyForm()
-    // })
+    postApplicationAdd(this.applyFormList).then((response: any) => {
+      this.getApplyList();
+      this.closeApplyForm();
+    });
   }
 
   // 编辑提交
   postApplyUpdate() {
-    console.log("编辑提交--");
-
-    // postApplyUpdate(this.applyFormList).then((response: any) => {
-    //   this.getApplyList()
-    //   this.closeApplyForm()
-    // })
+    postApplicationUpdate(this.applyFormList).then((response: any) => {
+      this.getApplyList();
+      this.closeApplyForm();
+    });
   }
 
   // 删除列表
   postApplyDelete(arrId: string[]) {
     const id = arrId ? arrId : this.selectList;
-    console.log("删除列表---");
-
-    // postRoleDelete(id).then((response: any) => {
-    //   this.$message({
-    //     type: 'success',
-    //     message: '删除成功!',
-    //   })
-    //   this.getRoleList()
-    // })
+    postApplicationDelete(id).then((response: any) => {
+      this.$message({
+        type: "success",
+        message: "删除成功!"
+      });
+      this.getApplyList();
+    });
   }
 }
 </script>

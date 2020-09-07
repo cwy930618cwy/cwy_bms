@@ -27,7 +27,12 @@
         />
       </el-form-item>
 
-      <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
+      <el-tooltip
+        v-model="capsTooltip"
+        content="Caps lock is On"
+        placement="right"
+        manual
+      >
         <el-form-item prop="password">
           <span class="svg-container">
             <svg-icon icon-class="password" />
@@ -46,7 +51,9 @@
             @keyup.enter.native="handleLogin"
           />
           <span class="show-pwd" @click="showPwd">
-            <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+            <svg-icon
+              :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'"
+            />
           </span>
         </el-form-item>
       </el-tooltip>
@@ -56,7 +63,8 @@
         type="primary"
         style="width:100%;margin-bottom:30px;"
         @click.native.prevent="handleLogin"
-      >登录</el-button>
+        >登录</el-button
+      >
     </el-form>
   </div>
 </template>
@@ -68,7 +76,7 @@ import svgIcon from "@/components/SvgIcon";
 export default {
   name: "Login",
   components: { svgIcon },
-  data () {
+  data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
         callback(new Error("请输入正确的账号"));
@@ -89,9 +97,7 @@ export default {
         password: "" // 205489
       },
       loginRules: {
-        username: [
-          { required: true, trigger: "blur" }
-        ],
+        username: [{ required: true, trigger: "blur" }],
         password: [
           { required: true, trigger: "blur", validator: validatePassword }
         ]
@@ -104,7 +110,7 @@ export default {
       otherQuery: {}
     };
   },
-  mounted () {
+  mounted() {
     if (this.loginForm.username === "") {
       this.$refs.username.focus();
     } else if (this.loginForm.password === "") {
@@ -112,11 +118,11 @@ export default {
     }
   },
   methods: {
-    checkCapslock (e) {
+    checkCapslock(e) {
       const { key } = e;
       this.capsTooltip = key && key.length === 1 && key >= "A" && key <= "Z";
     },
-    showPwd () {
+    showPwd() {
       if (this.passwordType === "password") {
         this.passwordType = "";
       } else {
@@ -126,7 +132,7 @@ export default {
         this.$refs.password.focus();
       });
     },
-    handleLogin () {
+    handleLogin() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true;

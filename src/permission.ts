@@ -15,15 +15,19 @@ router.beforeEach(async (to, from, next) => {
   // set page title
 
   // determine whether the user has logged in
-  const hasToken = getToken();
+  const hasToken = true;
 
   const hasRoles = store.state.user.roles && store.state.user.roles.length > 0;
 
+  console.log("hasRoles", hasRoles);
   if (hasToken) {
     if (hasRoles) {
       next();
     } else {
       store.dispatch("user/setRoles", [0]);
+      // const { roles } = await store.dispatch("user/getInfo");
+
+      // console.log("permisson-=---", roles);
       // get user info
       // note: roles must be a object array! such as: ['admin'] or ,['developer','editor']
       // const { roles } = await store.dispatch('user/getInfo')

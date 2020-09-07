@@ -27,7 +27,7 @@ export const constantRoutes = [
   {
     path: "/",
     component: Layout,
-    redirect: "/user/department"
+    redirect: "/payment/order"
   }
 ];
 
