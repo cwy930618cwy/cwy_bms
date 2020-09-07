@@ -11,39 +11,34 @@
 </template>
 
 <script lang="ts">
-import { isExternal } from "@/utils/validate";
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { isExternal } from '@/utils/validate'
+import { Vue, Component, Prop } from 'vue-property-decorator'
 @Component
 export default class SvgIcon extends Vue {
-  @Prop({ default: "" }) iconClass!: string;
-  @Prop({ default: "" }) className?: String;
-
-  mounted() {
-    console.log("className--", this.className);
-    console.log("iconClass---", this.iconClass);
-  }
+  @Prop({ default: '' }) iconClass!: string
+  @Prop({ default: '' }) className?: String
 
   get isExternal() {
-    return isExternal(this.iconClass);
+    return isExternal(this.iconClass)
   }
 
   get iconName() {
-    return `#icon-${this.iconClass}`;
+    return `#icon-${this.iconClass}`
   }
 
   get svgClass() {
     if (this.className) {
-      return "svg-icon " + this.className;
+      return 'svg-icon ' + this.className
     } else {
-      return "svg-icon";
+      return 'svg-icon'
     }
   }
 
   get styleExternalIcon() {
     return {
       mask: `url(${this.iconClass}) no-repeat 50% 50%`,
-      "-webkit-mask": `url(${this.iconClass}) no-repeat 50% 50%`
-    };
+      '-webkit-mask': `url(${this.iconClass}) no-repeat 50% 50%`,
+    }
   }
 }
 </script>

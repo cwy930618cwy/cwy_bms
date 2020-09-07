@@ -46,7 +46,7 @@
               <el-button
                 type="primary"
                 size="mini"
-                @click="getSelectSysAdminListByCurrentUserForAllocationDeptSysAdmin(scope.row.id)"
+                @click="getSelectSysAdminListByCurrentUserForAllocationSysAdmin(scope.row.id)"
               >设置系统管理员</el-button>
               <el-button type="primary" size="mini" @click="handleUser(scope.row.id)">授权角色</el-button>
               <el-button type="primary" size="mini" @click="getUserDetail(scope.row.id)">编辑</el-button>
@@ -146,7 +146,7 @@
     </el-dialog>
 
     <el-dialog
-      title="选择子系统"
+      title="选择部门管理员"
       center
       :visible.sync="showDeptDialog"
       :append-to-body="true"
@@ -172,7 +172,7 @@
     </el-dialog>
 
     <el-dialog
-      title="选择子系统"
+      title="选择系统管理员"
       center
       :visible.sync="showAdminDialog"
       :append-to-body="true"
@@ -193,7 +193,7 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="showAdminDialog = false">取 消</el-button>
-        <el-button type="primary" @click="getAllocationDeptSysAdmin">确 定</el-button>
+        <el-button type="primary" @click="getAllocationSysAdmin">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -220,12 +220,7 @@ import {
 })
 export default class user extends Vue {
   // 用户树侧边栏
-  navMenuData: any = [
-    {
-      deptName: '根',
-      deptVOS: [],
-    },
-  ]
+  navMenuData = []
   navMenuProp = {
     children: 'deptVOS',
     label: 'deptName',
@@ -470,8 +465,7 @@ export default class user extends Vue {
     }
     getDeptTree(params).then((response: any) => {
       const content = response.data.content
-      this.navMenuData[0].deptVOS = content
-      this.userFormList.deptId = content[0].id
+      this.navMenuData = content
     })
   }
   // 分页查询用户
@@ -591,7 +585,7 @@ export default class user extends Vue {
     })
   }
 
-  // 选择子部门
+  // 选择部门管理员
   getSelectSysAdminListByCurrentUserForAllocationDeptSysAdmin(id: Number) {
     this.deptFormList.id = id
     this.deptFormList.systemName = []
@@ -613,7 +607,7 @@ export default class user extends Vue {
     })
   }
 
-  // 选择子部门确认
+  // 选择部门管理员确认
   getAllocationDeptSysAdmin() {
     const data = {
       userIdList: [this.deptFormList.id],
@@ -624,8 +618,9 @@ export default class user extends Vue {
     })
   }
 
-  // 选择子系统
+  // 选择系统管理员
   getSelectSysAdminListByCurrentUserForAllocationSysAdmin(id: Number) {
+    console.log('aaaa---', id)
     this.systemFormList.id = id
     this.systemFormList.systemName = []
     getSelectSysAdminListByCurrentUserForAllocationSysAdmin({
@@ -645,13 +640,14 @@ export default class user extends Vue {
     })
   }
 
-  // 选择子系统确认
+  // 选择系统管理员确认
   getAllocationSysAdmin() {
-    const data = {
+    const params = {
       userIdList: [this.systemFormList.id],
       systemIdList: this.systemFormList.systemName,
     }
-    getAllocationDeptSysAdmin(data).then((response: any) => {
+
+    getAllocationSysAdmin(params).then((response: any) => {
       this.showAdminDialog = false
     })
   }

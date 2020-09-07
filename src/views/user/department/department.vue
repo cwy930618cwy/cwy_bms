@@ -123,12 +123,7 @@ import {
 })
 export default class department extends Vue {
   // 部门树侧边栏
-  navMenuData: any = [
-    {
-      deptName: '根',
-      deptVOS: [],
-    },
-  ]
+  navMenuData = []
   navMenuProp = {
     children: 'deptVOS',
     label: 'deptName',
@@ -281,7 +276,7 @@ export default class department extends Vue {
       pageSize: 1000,
     }
     getDeptTree(params).then((response: any) => {
-      this.navMenuData[0].deptVOS = response.data.content
+      this.navMenuData = response.data.content
       if (!!this.departmentList.parentId) {
         this.$nextTick(() => {
           ;(this.$refs.treeRef as any).setCurrentKey(

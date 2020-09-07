@@ -163,6 +163,7 @@ export default class limit extends Vue {
     value: '',
     relSystemId: null,
     id: null,
+    parentName: '根',
   }
 
   tableData: any = {}
@@ -175,7 +176,7 @@ export default class limit extends Vue {
     id: -1,
     name: '',
     value: '',
-    type: '',
+    type: 0,
     uri: '',
     icon: '',
     remark: '',
@@ -238,12 +239,16 @@ export default class limit extends Vue {
 
   // 添加按钮点击显示弹窗
   addLimit() {
-    if (this.limitList.parentId >= 0) {
+    console.log('this.limitList.relSystemId', this.limitList.relSystemId)
+    if (
+      this.limitList.relSystemId >= 0 &&
+      this.limitList.relSystemId !== null
+    ) {
       this.limitFormName = '添加权限'
       this.showAddDialog = !this.showAddDialog
     } else {
       this.$message({
-        message: '请选择部门',
+        message: '请选择系统',
         type: 'warning',
       })
     }
