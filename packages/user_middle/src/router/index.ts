@@ -7,7 +7,7 @@ Vue.use(Router);
 import Layout from "@/layout/index.vue";
 
 import userRouter from "./modules/user";
-// import tableRouter from './modules/tabel'
+
 export const constantRoutes = [
   {
     path: "/404",
@@ -17,6 +17,11 @@ export const constantRoutes = [
   {
     path: "/401",
     component: () => import("@/views/error-page/401.vue"),
+    hidden: true
+  },
+  {
+    path: "/login",
+    component: () => import("@/views/login/index.vue"),
     hidden: true
   },
   {
@@ -32,8 +37,6 @@ export const constantRoutes = [
  */
 export const asyncRoutes = [
   userRouter,
-  // tableRouter,
-
   // 404 page must be placed at the end !!!
   { path: "*", redirect: "/404", hidden: true }
 ];

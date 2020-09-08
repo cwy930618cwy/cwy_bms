@@ -6,4 +6,5 @@ declare module "js-cookie";
 declare module "nprogress";
 declare module "*.scss";
 declare module "path";
-declare module "components";
+declare module "file-saver";
+declare module "path-to-regexp";

@@ -10,6 +10,7 @@ export default {
       if (roles.includes("admin")) {
         accessedRoutes = asyncRoutes || [];
       } else {
+        console.log("filterAsyncRoutes");
         // accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
       }
       commit("SET_ROUTES", accessedRoutes);

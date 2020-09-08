@@ -1,92 +1,14 @@
 <template>
   <div class="tableList">
-    <el-form ref="formName" :model="formData" label-width="80px">
-      <div v-for="(item, index) in formData.formList" :key="index">
-        <el-form-item
-          :label="item.name"
-          :rules="item.rules"
-          :prop="'formList.' + index + '.data'"
-        >
+    <el-form ref="formName" :model="componentForm" label-width="80px">
+      <div v-for="(item, index) in componentForm.formList" :key="index">
+        <el-form-item :label="item.name" :rules="item.rules" :prop="'formList.' + index + '.data'">
           <!-- input输入框 -->
           <el-input
             v-if="item.type === 'Input'"
             :placeholder="item.placeholder"
             v-model="item.data"
           ></el-input>
-          <!-- 下拉框 -->
-          <el-select
-            v-if="item.type === 'Select'"
-            @change="$emit('handle-select', $event)"
-            v-model="item.data"
-            placeholder="请选择活动区域"
-          >
-            <el-option
-              v-for="(selectItem, selectIndex) in item.label"
-              :key="selectIndex"
-              :label="selectItem.label"
-              :value="selectItem.value"
-            ></el-option>
-          </el-select>
-          <!-- 多行输入框 -->
-          <el-input
-            v-if="item.type === 'Textarea'"
-            :placeholder="item.placeholder"
-            type="textarea"
-            v-model="item.data"
-          ></el-input>
-          <!-- 单选 -->
-          <div :style="{ textAlign: 'left' }" v-if="item.type === 'Radio'">
-            <el-radio
-              v-for="(childItem, childIndex) in item.label"
-              :key="childIndex"
-              v-model="item.data"
-              :label="childItem.value"
-              >{{ childItem.label }}</el-radio
-            >
-          </div>
-          <!-- 多选 -->
-          <el-checkbox-group
-            v-if="item.type === 'Checkbox'"
-            v-model="item.data"
-          >
-            <el-checkbox
-              v-for="(childItem, childIndex) in item.defaultdata"
-              :key="childIndex"
-              :label="childItem.value"
-              >{{ childItem.label }}</el-checkbox
-            >
-          </el-checkbox-group>
-          <!-- 穿梭框 -->
-          <el-transfer
-            v-if="item.type === 'transfer'"
-            v-model="item.data"
-            :data="item.defaultdata"
-          ></el-transfer>
-          <!-- 树状图 -->
-          <el-tree
-            ref="tree"
-            v-if="item.type === 'tree'"
-            :data="item.data"
-            highlight-current
-            :show-checkbox="item.showCheckBox"
-            node-key="id"
-            default-expand-all
-            :props="item.defaultProps"
-            @node-click="nodeClick"
-          ></el-tree>
-          <!-- 图片上传 -->
-          <Upload
-            :style="{ textAlign: 'left' }"
-            v-if="item.type === 'upload'"
-            v-model="item.data"
-          />
-          <!-- 级联 -->
-          <el-cascader
-            v-if="item.type === 'cascader'"
-            v-model="item.data"
-            :options="item.options"
-            :props="item.props"
-          ></el-cascader>
         </el-form-item>
       </div>
     </el-form>
@@ -99,7 +21,15 @@ import Upload from "../Upload/Upload.vue";
   components: { Upload },
 })
 export default class Form extends Vue {
-  @Prop({ default: () => [] }) formData!: any;
+  // @Prop({ default: () => [] }) formData!: any;
+  formData = {
+    formList: {},
+  };
+  componentForm: any = {};
+
+  mounted() {
+    this.componentForm = JSON.parse(JSON.stringify(this.formData));
+  }
 
   nodeClick(index: any) {
     this.$emit("node-click", index);
@@ -121,7 +51,7 @@ export default class Form extends Vue {
   submitForm() {
     (this.$refs.formName as any).validate((valid: any) => {
       if (valid) {
-        this.$emit("handle-validate");
+        this.$emit("handle-validate", this.componentForm);
       } else {
         return false;
       }

@@ -2,7 +2,10 @@
   <div class="dialog">
     <div class="dialog__contain">
       <div class="dialog__content">
-        <div class="dialog__title" v-if="title !== ''">{{ title }}</div>
+        <div
+          class="dialog__title"
+          v-if="componentschooseTableButton.title !== ''"
+        >{{ componentschooseTableButton.title }}</div>
         <div class="dialog__close" @click="$emit('close')"></div>
         <div class="dialog__content">
           <slot />
@@ -10,12 +13,11 @@
         <div class="dialog__buttons">
           <el-button
             size="medium"
-            v-for="(button, index) in buttons"
+            v-for="(button, index) in componentschooseTableButton.buttons"
             :key="index"
             :type="button.type"
             @click="$emit('button-click', index)"
-            >{{ button.value }}</el-button
-          >
+          >{{ button.value }}</el-button>
         </div>
       </div>
     </div>
@@ -24,24 +26,34 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Provide } from "vue-property-decorator";
+import { Vue, Component, Prop } from "vue-property-decorator";
 
-@Component({
-  components: {}
-})
-export default class Dialog extends Vue {
-  @Prop({ default: "" }) title!: string;
-  @Prop({ default: () => [] }) buttons!: string[];
-  @Prop({ default: () => [] }) width!: number;
-  @Provide() close() {
-    this.$emit("close");
+@Component
+export default class MsbDialog extends Vue {
+  @Prop({ type: Object })
+  chooseTableButton!: object;
+
+  componentschooseTableButton = {
+    title: "sss",
+    buttons: [
+      {
+        type: "info",
+        value: "2",
+      },
+    ],
+  };
+
+  mounted() {
+    // this.componentschooseTableButton = JSON.parse(
+    //   JSON.stringify(this.chooseTableButton)
+    // );
   }
 }
 </script>
 
 <style lang="scss">
-@import "@/styles/functions.scss";
-@import "@/styles/mixins.scss";
+@import "../common/functions.scss";
+@import "../common/mixins.scss";
 
 .dialog {
   position: fixed;

@@ -1,4 +1,5 @@
 <script>
+import SvgIcon from "@/components/SvgIcon/index.vue";
 export default {
   name: "MenuItem",
   functional: true,
@@ -20,7 +21,7 @@ export default {
       if (icon.includes("el-icon")) {
         vnodes.push(<i class={[icon, "sub-el-icon"]} />);
       } else {
-        vnodes.push(<i class={[icon, "sub-el-icon"]} />);
+        vnodes.push(<SvgIcon icon-class={icon} />);
       }
     }
 

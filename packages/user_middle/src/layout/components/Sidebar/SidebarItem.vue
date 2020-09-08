@@ -73,7 +73,7 @@ export default class SidebarItem extends Vue {
         return false;
       } else {
         // Temp set(will be used if only has one showing child)
-        // this.onlyOneChild = item;
+        this.onlyOneChild = item;
 
         const onlyOneChild =
           (item as any).meta.icon || (item.meta && item.meta.icon);

@@ -1,6 +1,6 @@
 <template>
   <div class="components_search">
-    <div v-for="(item, index) in searchList" :key="index">
+    <div v-for="(item, index) in componentSearchList" :key="index">
       <!-- 输入框 -->
       <el-input
         v-if="item.type === 'Input'"
@@ -9,11 +9,7 @@
         clearable
       ></el-input>
       <!-- 下拉框 -->
-      <el-select
-        v-if="item.type === 'Select'"
-        v-model="item.name"
-        :placeholder="item.placeholder"
-      >
+      <el-select v-if="item.type === 'Select'" v-model="item.name" :placeholder="item.placeholder">
         <el-option
           v-for="(selectItem, selectIndex) in item.label"
           :key="selectIndex"
@@ -22,7 +18,7 @@
         ></el-option>
       </el-select>
     </div>
-    <el-button @click="$emit('handle-search', searchList)">搜索</el-button>
+    <el-button @click="$emit('handle-search', componentSearchList)">搜索</el-button>
   </div>
 </template>
 <script lang="ts">
@@ -30,6 +26,11 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 @Component
 export default class Search extends Vue {
   @Prop({ default: () => [] }) searchList!: string[];
+  componentSearchList = [];
+
+  mounted() {
+    this.componentSearchList = JSON.parse(JSON.stringify(this.searchList));
+  }
 }
 </script>
 <style lang="scss" scoped>

@@ -18,10 +18,17 @@ export default {
   // user login
   Login({ commit }, userInfo) {
     const { username, password } = userInfo;
+    console.log("login---");
     return new Promise((resolve, reject) => {
-      loginApi({ username: username.trim(), password: password })
+      loginApi({
+        userName: username.trim(),
+        password: password,
+        clientType: 0
+      })
         .then(response => {
+          console.log("respon--");
           const { data } = response;
+          console.log(data);
           commit("SET_TOKEN", data.token);
           setToken(data.token);
           resolve();

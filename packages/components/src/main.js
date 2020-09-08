@@ -1,8 +1,8 @@
 import "vue-touch-ripple/dist/vue-touch-ripple.css";
 import Vue from "vue";
-import Input from "./input/Input.vue";
+import MsbDialog from "./MsbDialog/MsbDialog.vue";
+import DialogPlugin from "./MsbDialog/dialog.plugin";
 import Button from "./Button/Button.vue";
-import Dialog from "./dialog/Dialog.vue";
 import ErrorLog from "./ErrorLog/ErrorLog.vue";
 import Form from "./Form/Form.vue";
 import Hamburger from "./Hamburger/Hamburger.vue";
@@ -18,9 +18,8 @@ import "element-ui/lib/theme-chalk/index.css";
 Vue.use(Element);
 
 export {
-  Input,
+  MsbDialog,
   Button,
-  Dialog,
   ErrorLog,
   Form,
   Hamburger,
@@ -30,4 +29,5 @@ export {
   SvgIcon,
   Table,
   Upload,
+  DialogPlugin,
 };
