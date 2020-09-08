@@ -1,3 +1,0 @@
-@function dim($x, $scale: 1) {
-  @return $x / $scale / 20 * 1rem;
-}
