@@ -8,3 +8,4 @@ declare module "*.scss";
 declare module "path";
 declare module "file-saver";
 declare module "path-to-regexp";
+declare module "vuelidate";

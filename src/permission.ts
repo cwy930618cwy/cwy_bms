@@ -15,7 +15,7 @@ router.beforeEach(async (to, from, next) => {
   // set page title
 
   // determine whether the user has logged in
-  const hasToken = true;
+  const hasToken = getToken();
 
   const hasRoles = store.state.user.roles && store.state.user.roles.length > 0;
 

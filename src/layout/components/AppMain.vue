@@ -1,6 +1,5 @@
 <template>
   <section class="app-main">
-    <el-button @click="reset">重新登录</el-button>
     <transition name="fade-transform" mode="out-in">
       <keep-alive :include="cachedViews">
         <router-view :key="key" />
@@ -19,12 +18,6 @@ export default class AppMain extends Vue {
   }
   get key() {
     return this.$route.path;
-  }
-
-  reset() {
-    this.$store.dispatch("user/resetToken").then(() => {
-      location.reload();
-    });
   }
 }
 </script>

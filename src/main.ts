@@ -12,6 +12,7 @@ import "@/styles/index.scss"; // global css
 import App from "./App.vue";
 import store from "./store";
 import router from "./router";
+import "./plugins";
 
 import "./icons"; // icon
 import "./permission.ts"; // permission control

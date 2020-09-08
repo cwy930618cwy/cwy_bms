@@ -7,7 +7,7 @@ Vue.use(Router);
 import Layout from "@/layout/index.vue";
 
 import userRouter from "./modules/user";
-import paymentRouter from "./modules/payment";
+
 export const constantRoutes = [
   {
     path: "/404",
@@ -27,7 +27,7 @@ export const constantRoutes = [
   {
     path: "/",
     component: Layout,
-    redirect: "/payment/order"
+    redirect: "/user/game"
   }
 ];
 
@@ -37,7 +37,6 @@ export const constantRoutes = [
  */
 export const asyncRoutes = [
   userRouter,
-  paymentRouter,
   // 404 page must be placed at the end !!!
   { path: "*", redirect: "/404", hidden: true }
 ];
